@@ -1,0 +1,1 @@
+{"num_filters": 16, "kernel_size": 2, "hidden_size": 85, "dropout_prob": 0.3946906336051287, "lr": 0.0006637956703702941, "batch_size": 240, "weight_decay": 1.1730213733312555e-06}

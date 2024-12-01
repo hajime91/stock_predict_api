@@ -1,0 +1,1 @@
+{"num_layers": 3, "num_heads": 7, "hidden_size": 441, "dropout_prob": 0.40087007046172823, "lr": 0.00013480918503892827, "batch_size": 30, "weight_decay": 2.1842989650719408e-05}
