@@ -69,6 +69,12 @@ tickers = {
     '^IXIC':"NASDAQ"
     }
 
+today = datetime.today() # 今日の日付を取得
+yesterday = today - timedelta(days=1) # 前日の日付を取得
+ticker = st.selectbox("銘柄", list(tickers.keys()), format_func=lambda x: tickers[x]) # ティッカーシンボルの入力
+start_date = st.date_input('開始日', yesterday - timedelta(days=365)) # 日付範囲の入力
+end_date = st.date_input('終了日', yesterday) # 日付範囲の入力
+
 # 初期化 (最初に `show_graph` が存在しない場合に False を設定)
 if 'show_graph1' not in st.session_state:
     st.session_state.show_graph1 = False
@@ -78,12 +84,6 @@ if st.button('株価チャートを表示'): # ティッカーシンボルが入
 
 # グラフを表示するかどうかを確認
 if st.session_state.show_graph1:
-    
-    today = datetime.today() # 今日の日付を取得
-    yesterday = today - timedelta(days=1) # 前日の日付を取得
-    ticker = st.selectbox("銘柄", list(tickers.keys()), format_func=lambda x: tickers[x]) # ティッカーシンボルの入力
-    start_date = st.date_input('開始日', yesterday - timedelta(days=365)) # 日付範囲の入力
-    end_date = st.date_input('終了日', yesterday) # 日付範囲の入力
     
     # チャートを作成する関数
     def company_stock_technical(ticker, start=None, end=None):
