@@ -261,536 +261,8 @@ import yfinance as yf
 #import talib as ta
 import numpy as np
 
-def company_stock_data(ticker, start, end):
-
-    # 株価データを取得(期間指定)
-    df = yf.download(ticker, start=start, end=end)
-
-    # タイムゾーンを削除
-    df.index = df.index.tz_localize(None)
-
-    # dfが2段のカラムを持つDataFrameの場合
-    df.columns = df.columns.get_level_values(0)
-
-    # Yahoo Financeからティッカー情報を取得
-    stock_info = yf.Ticker(ticker)
-    company_name = stock_info.info.get('longName', 'Company name not found')
-
-    # MACD
-    # 0以上:上昇トレンド
-    # 0以下:下降トレンド
-    # MACD_hist = MACD - MACD_signal
-    #df['MACD'], df['MACD_signal'], df['MACD_hist'] = ta.MACD(df['Adj Close'], fastperiod=12, slowperiod=26, signalperiod=9)
-
-    # RSI
-    #df['RSI'] = ta.RSI(df['Adj Close'], timeperiod=14)
-
-    # ボリンジャーバンド
-    # 2σに入る
-    # matype=0:単純移動平均
-    # matype=1:指数移動平均
-    # matype=2:加重移動平均
-    #df['upper'], df['middle'], df['lower'] = ta.BBANDS(df['Adj Close'], timeperiod=20, nbdevup=2, nbdevdn=2, matype=0)
-
-    # date, price
-    date = df.index
-    price = df['Adj Close']
-
-    # 単純移動平均
-    df['SMA05'] = df['Adj Close'].rolling(window=5).mean()
-    df['SMA25'] = df['Adj Close'].rolling(window=25).mean()
-    df['SMA75'] = df['Adj Close'].rolling(window=75).mean()
-    df['SMA200'] = df['Adj Close'].rolling(window=200).mean()
-
-    # 基準線:過去26日間の最高値と最安値の平均を結んだ線
-    max26 = df['High'].rolling(window=26).max()
-    min26 = df['Low'].rolling(window=26).min()
-    df['base_line'] = (max26 + min26) / 2
-
-    # 転換線:過去9日間の最高値と最安値の平均を結んだ線
-    high9 = df['High'].rolling(window=9).max()
-    low9 = df['Low'].rolling(window=9).min()
-    df['turn_line'] = (high9 + low9) / 2
-
-    # 先行スパン1:基準線と転換線の平均を結んだ線を26日分未来にずらした線
-    df['span1'] = (df['base_line'] + df['turn_line']) / 2
-    df['span1'] = df['span1'].shift(25)
-
-    # 先行スパン2:過去52日間の最高値と最安値の平均を結んだ線を26日分未来にずらした線
-    high52 = df['High'].rolling(window=52).max()
-    low52 = df['Low'].rolling(window=52).min()
-    df['span2'] = (high52 + low52) / 2
-    df['span2'] = df['span2'].shift(25)
-
-    # 遅行線:当日の終値を26日分過去にずらした線、売り買いのタイミングを判断。遅行線より上なら売り、下なら買い
-    df['slow_line'] = df['Adj Close'].shift(-25)
-
-    # 単純移動平均
-    # High
-    df['High_SMA05'] = df['High'].rolling(window=5).mean()
-    df['High_SMA25'] = df['High'].rolling(window=25).mean()
-    df['High_SMA75'] = df['High'].rolling(window=75).mean()
-    df['High_SMA200'] = df['High'].rolling(window=200).mean()
-
-    # Low
-    df['Low_SMA05'] = df['Low'].rolling(window=5).mean()
-    df['Low_SMA25'] = df['Low'].rolling(window=25).mean()
-    df['Low_SMA75'] = df['Low'].rolling(window=75).mean()
-    df['Low_SMA200'] = df['Low'].rolling(window=200).mean()
-
-    # Open
-    df['Open_SMA05'] = df['Open'].rolling(window=5).mean()
-    df['Open_SMA25'] = df['Open'].rolling(window=25).mean()
-    df['Open_SMA75'] = df['Open'].rolling(window=75).mean()
-    df['Open_SMA200'] = df['Open'].rolling(window=200).mean()
-
-    # 加重移動平均
-    # 重みのリスト
-    weights = np.array([1, 2, 3])  # 直近日間に重みをつける
-
-    # WMAを計算
-    def weighted_moving_average(x):
-        return np.dot(x, weights) / weights.sum()
-
-    # 加重移動平均を適用
-    df['Adj Close WMA'] = df['Adj Close'].rolling(window=3).apply(weighted_moving_average, raw=True)
-    df['Open WMA'] = df['Open'].rolling(window=3).apply(weighted_moving_average, raw=True)
-    df['High WMA'] = df['High'].rolling(window=3).apply(weighted_moving_average, raw=True)
-    df['Low WMA'] = df['Low'].rolling(window=3).apply(weighted_moving_average, raw=True)
-
-    # 指数平滑移動平均
-    # spanが小さいほど直近の値に重みを多く与える
-    df['Adj Close EMA'] = df['Adj Close'].ewm(span=3, adjust=False).mean()
-    df['Open EMA'] = df['Open'].ewm(span=3, adjust=False).mean()
-    df['High EMA'] = df['High'].ewm(span=3, adjust=False).mean()
-    df['Low EMA'] = df['Low'].ewm(span=3, adjust=False).mean()
-
-    # dfを返す
-    return df
-
-# 株価予測のデータを作成
-#from data.defs.def_company_stock_data import company_stock_data # 関数のインポート
-#import datetime
-#import pandas as pd
-
-# 今日の日付を取得
-today = datetime.today()
-
-# 日付をフォーマット (年-月-日) に変更
-start = '1800-01-01'
-end = today.strftime('%Y-%m-%d')
-
-# 日経225株価データを取得
-ticker = '^N225'
-df_stock_data_n225 = pd.DataFrame()
-df_stock_data_n225 = company_stock_data(ticker, start, end)
-from data.df_columns import df_columns # カラム
-df_stock_data_n225 = df_stock_data_n225[df_stock_data_n225.columns.intersection(df_columns)]
-print(df_stock_data_n225.tail(1)) # df_stock_data_n225 の確認
-
-# ダウデータを取得
-ticker = '^DJI'
-df_stock_data_dow = pd.DataFrame()
-df_stock_data_dow = company_stock_data(ticker, start, end)
-from data.df_columns import df_columns # カラム
-df_stock_data_dow = df_stock_data_dow[df_stock_data_dow.columns.intersection(df_columns)]
-print(df_stock_data_dow.tail(1)) # df_stock_data_dow の確認
-
-# SP500 のデータを取得
-ticker = '^GSPC'
-df_stock_data_sp500 = pd.DataFrame()
-df_stock_data_sp500 = company_stock_data(ticker, start, end)
-from data.df_columns import df_columns # カラム
-df_stock_data_sp500 = df_stock_data_sp500[df_stock_data_sp500.columns.intersection(df_columns)]
-print(df_stock_data_sp500.tail(1)) # df_stock_data_sp500 の確認
-
-# NASDAQ のデータを取得
-ticker = '^IXIC'
-df_stock_data_nasdaq = pd.DataFrame()
-df_stock_data_nasdaq = company_stock_data(ticker, start, end)
-from data.df_columns import df_columns # カラム
-df_stock_data_nasdaq = df_stock_data_nasdaq[df_stock_data_nasdaq.columns.intersection(df_columns)]
-print(df_stock_data_nasdaq.tail(1)) # df_stock_data_nasdaq の確認
-
-
-# シーケンスデータの作成
-#from data.df_stock_data import df_stock_data_n225, df_stock_data_dow, df_stock_data_sp500, df_stock_data_nasdaq
-from data.defs.def_processing_model import processing_lstm, processing_cnn, processing_cnn_lstm, processing_timesnet, processing_transformer
-
-# ウィンドウサイズ
-window = 30
-
-# nikkei
-nikkei_x_pred_lstm, nikkei_input_dim_lstm, nikkei_t_scaler_lstm = processing_lstm(df_stock_data_n225, window)
-nikkei_x_pred_cnn, nikkei_input_dim_cnn, nikkei_t_scaler_cnn = processing_cnn(df_stock_data_n225, window)
-nikkei_x_pred_cnn_lstm, nikkei_input_dim_cnn_lstm, nikkei_t_scaler_cnn_lstm = processing_cnn_lstm(df_stock_data_n225, window)
-nikkei_x_pred_timesnet, nikkei_input_dim_timesnet, nikkei_t_scaler_timesnet = processing_timesnet(df_stock_data_n225, window)
-nikkei_x_pred_transformer, nikkei_input_dim_transformer, nikkei_t_scaler_transformer = processing_transformer(df_stock_data_n225, window)
-
-# dow
-dow_x_pred_lstm, dow_input_dim_lstm, dow_t_scaler_lstm = processing_lstm(df_stock_data_dow, window)
-dow_x_pred_cnn, dow_input_dim_cnn, dow_t_scaler_cnn = processing_cnn(df_stock_data_dow, window)
-dow_x_pred_cnn_lstm, dow_input_dim_cnn_lstm, dow_t_scaler_cnn_lstm = processing_cnn_lstm(df_stock_data_dow, window)
-dow_x_pred_timesnet, dow_input_dim_timesnet, dow_t_scaler_timesnet = processing_timesnet(df_stock_data_dow, window)
-dow_x_pred_transformer, dow_input_dim_transformer, dow_t_scaler_transformer = processing_transformer(df_stock_data_dow, window)
-
-# sp500
-sp500_x_pred_lstm, sp500_input_dim_lstm, sp500_t_scaler_lstm = processing_lstm(df_stock_data_sp500, window)
-sp500_x_pred_cnn, sp500_input_dim_cnn, sp500_t_scaler_cnn = processing_cnn(df_stock_data_sp500, window)
-sp500_x_pred_cnn_lstm, sp500_input_dim_cnn_lstm, sp500_t_scaler_cnn_lstm = processing_cnn_lstm(df_stock_data_sp500, window)
-sp500_x_pred_timesnet, sp500_input_dim_timesnet, sp500_t_scaler_timesnet = processing_timesnet(df_stock_data_sp500, window)
-sp500_x_pred_transformer, sp500_input_dim_transformer, sp500_t_scaler_transformer = processing_transformer(df_stock_data_sp500, window)
-
-# nasdaq
-nasdaq_x_pred_lstm, nasdaq_input_dim_lstm, nasdaq_t_scaler_lstm = processing_lstm(df_stock_data_nasdaq, window)
-nasdaq_x_pred_cnn, nasdaq_input_dim_cnn, nasdaq_t_scaler_cnn = processing_cnn(df_stock_data_nasdaq, window)
-nasdaq_x_pred_cnn_lstm, nasdaq_input_dim_cnn_lstm, nasdaq_t_scaler_cnn_lstm = processing_cnn_lstm(df_stock_data_nasdaq, window)
-nasdaq_x_pred_timesnet, nasdaq_input_dim_timesnet, nasdaq_t_scaler_timesnet = processing_timesnet(df_stock_data_nasdaq, window)
-nasdaq_x_pred_transformer, nasdaq_input_dim_transformer, nasdaq_t_scaler_transformer = processing_transformer(df_stock_data_nasdaq, window)
-
-# 各データセットとモデルごとにx_predをまとめる関数
-def get_x_preds():
-    return {
-        "nikkei": {
-            "LSTM": nikkei_x_pred_lstm,
-            "CNN": nikkei_x_pred_cnn,
-            "CNN-LSTM": nikkei_x_pred_cnn_lstm,
-            "TimesNet": nikkei_x_pred_timesnet,
-            "Transformer": nikkei_x_pred_transformer
-        },
-        "dow": {
-            "LSTM": dow_x_pred_lstm,
-            "CNN": dow_x_pred_cnn,
-            "CNN-LSTM": dow_x_pred_cnn_lstm,
-            "TimesNet": dow_x_pred_timesnet,
-            "Transformer": dow_x_pred_transformer
-        },
-        "sp500": {
-            "LSTM": sp500_x_pred_lstm,
-            "CNN": sp500_x_pred_cnn,
-            "CNN-LSTM": sp500_x_pred_cnn_lstm,
-            "TimesNet": sp500_x_pred_timesnet,
-            "Transformer": sp500_x_pred_transformer
-        },
-        "nasdaq": {
-            "LSTM": nasdaq_x_pred_lstm,
-            "CNN": nasdaq_x_pred_cnn,
-            "CNN-LSTM": nasdaq_x_pred_cnn_lstm,
-            "TimesNet": nasdaq_x_pred_timesnet,
-            "Transformer": nasdaq_x_pred_transformer
-        }
-    }
-
-# 各データセットとモデルごとにinput_dimをまとめる関数
-def get_input_dims():
-    return {
-        "nikkei": {
-            "LSTM": nikkei_input_dim_lstm,
-            "CNN": nikkei_input_dim_cnn,
-            "CNN-LSTM": nikkei_input_dim_cnn_lstm,
-            "TimesNet": nikkei_input_dim_timesnet,
-            "Transformer": nikkei_input_dim_transformer
-        },
-        "dow": {
-            "LSTM": dow_input_dim_lstm,
-            "CNN": dow_input_dim_cnn,
-            "CNN-LSTM": dow_input_dim_cnn_lstm,
-            "TimesNet": dow_input_dim_timesnet,
-            "Transformer": dow_input_dim_transformer
-        },
-        "sp500": {
-            "LSTM": sp500_input_dim_lstm,
-            "CNN": sp500_input_dim_cnn,
-            "CNN-LSTM": sp500_input_dim_cnn_lstm,
-            "TimesNet": sp500_input_dim_timesnet,
-            "Transformer": sp500_input_dim_transformer
-        },
-        "nasdaq": {
-            "LSTM": nasdaq_input_dim_lstm,
-            "CNN": nasdaq_input_dim_cnn,
-            "CNN-LSTM": nasdaq_input_dim_cnn_lstm,
-            "TimesNet": nasdaq_input_dim_timesnet,
-            "Transformer": nasdaq_input_dim_transformer
-        }
-    }
-
-# 各データセットとモデルごとにt_scalerをまとめる関数
-def get_t_scalers():
-    return {
-        "nikkei": {
-            "LSTM": nikkei_t_scaler_lstm,
-            "CNN": nikkei_t_scaler_cnn,
-            "CNN-LSTM": nikkei_t_scaler_cnn_lstm,
-            "TimesNet": nikkei_t_scaler_timesnet,
-            "Transformer": nikkei_t_scaler_transformer
-        },
-        "dow": {
-            "LSTM": dow_t_scaler_lstm,
-            "CNN": dow_t_scaler_cnn,
-            "CNN-LSTM": dow_t_scaler_cnn_lstm,
-            "TimesNet": dow_t_scaler_timesnet,
-            "Transformer": dow_t_scaler_transformer
-        },
-        "sp500": {
-            "LSTM": sp500_t_scaler_lstm,
-            "CNN": sp500_t_scaler_cnn,
-            "CNN-LSTM": sp500_t_scaler_cnn_lstm,
-            "TimesNet": sp500_t_scaler_timesnet,
-            "Transformer": sp500_t_scaler_transformer
-        },
-        "nasdaq": {
-            "LSTM": nasdaq_t_scaler_lstm,
-            "CNN": nasdaq_t_scaler_cnn,
-            "CNN-LSTM": nasdaq_t_scaler_cnn_lstm,
-            "TimesNet": nasdaq_t_scaler_timesnet,
-            "Transformer": nasdaq_t_scaler_transformer
-        }
-    }
-
-
 st.title('株価予測')
 st.write('銘柄、学習モデルを選択してください')
-
-# 関数を呼び出して辞書を取得
-x_preds = get_x_preds()
-input_dims = get_input_dims()
-t_scalers = get_t_scalers()
-
-# 入力データの形式を定義（JSONリクエスト用）
-class PredictionRequest(BaseModel):
-    model_type: str  # 'LSTM', 'CNN', 'CNN-LSTM', 'TimesNet', 'Transformer'
-    data_type: str   # 'nikkei', 'dow', 'usd_jpy', 'wti', 'gold', 'us_10yb', 'nikkei_cme'
-    features: list
-
-# モデルのロード
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# モデル選択の関数
-def load_model(model_type, data_type):
-    # data_type と model_type に基づいて input_dim と最適パラメータを取得
-    try:
-        input_dim = input_dims[data_type][model_type]
-    except KeyError:
-        raise ValueError(f"Invalid data_type '{data_type}' or model_type '{model_type}'. Please check the available options.")
-    
-    # データタイプに基づいて適切なパラメータを選択
-    if data_type == 'nikkei':
-        if model_type == 'LSTM':
-            best_params = best_params_lstm_nikkei
-        elif model_type == 'CNN':
-            best_params = best_params_cnn_nikkei
-        elif model_type == 'CNN-LSTM':
-            best_params = best_params_cnn_lstm_nikkei
-        elif model_type == 'TimesNet':
-            best_params = best_params_timesnet_nikkei
-        elif model_type == 'Transformer':
-            best_params = best_params_transformer_nikkei
-        else:
-            raise ValueError("Invalid model_type. Choose either 'LSTM' or 'CNN'.")
-        
-    elif data_type == 'dow':
-        if model_type == 'LSTM':
-            best_params = best_params_lstm_dow
-        elif model_type == 'CNN':
-            best_params = best_params_cnn_dow
-        elif model_type == 'CNN-LSTM':
-            best_params = best_params_cnn_lstm_dow
-        elif model_type == 'TimesNet':
-            best_params = best_params_timesnet_dow
-        elif model_type == 'Transformer':
-            best_params = best_params_transformer_dow
-        else:
-            raise ValueError("Invalid model_type. Choose either 'LSTM' or 'CNN'.")
-        
-    elif data_type == 'sp500':
-        if model_type == 'LSTM':
-            best_params = best_params_lstm_sp500
-        elif model_type == 'CNN':
-            best_params = best_params_cnn_sp500
-        elif model_type == 'CNN-LSTM':
-            best_params = best_params_cnn_lstm_sp500
-        elif model_type == 'TimesNet':
-            best_params = best_params_timesnet_sp500
-        elif model_type == 'Transformer':
-            best_params = best_params_transformer_sp500
-        else:
-            raise ValueError("Invalid model_type. Choose either 'LSTM' or 'CNN'.")
-        
-    elif data_type == 'nasdaq':
-        if model_type == 'LSTM':
-            best_params = best_params_lstm_nasdaq
-        elif model_type == 'CNN':
-            best_params = best_params_cnn_nasdaq
-        elif model_type == 'CNN-LSTM':
-            best_params = best_params_cnn_lstm_nasdaq
-        elif model_type == 'TimesNet':
-            best_params = best_params_timesnet_nasdaq
-        elif model_type == 'Transformer':
-            best_params = best_params_transformer_nasdaq
-        else:
-            raise ValueError("Invalid model_type. Choose either 'LSTM' or 'CNN'.")
-        
-    else:
-        raise ValueError(f"Invalid data_type '{data_type}'. Choose either 'nikkei' or 'dow'.")
-    
-    # モデルの作成とロード
-    if model_type == 'LSTM':
-        model = LSTMRegressor(
-            input_dim=input_dim,
-            hidden_size=best_params['hidden_size'],
-            num_layers=best_params['num_layers'],
-            dropout_prob=best_params['dropout_prob'],
-            lr=best_params['lr'],
-            weight_decay=best_params['weight_decay']
-        ).to(device)
-        
-    elif model_type == 'CNN':
-        model = CNNRegressor(
-            input_dim=input_dim,
-            num_filters=best_params['num_filters'],
-            kernel_size=best_params['kernel_size'],
-            dropout_prob=best_params['dropout_prob'],
-            lr=best_params['lr'],
-            weight_decay=best_params['weight_decay']
-        ).to(device)
-        
-    elif model_type == 'CNN-LSTM':
-        model = CNN_LSTM_Regressor(
-            input_dim=input_dim,
-            num_filters=best_params['num_filters'],
-            kernel_size=best_params['kernel_size'],
-            hidden_size=best_params['hidden_size'],
-            dropout_prob=best_params['dropout_prob'],
-            lr=best_params['lr'],
-            weight_decay=best_params['weight_decay']
-        ).to(device)
-        
-    elif model_type == 'TimesNet':
-        model = TimesNetRegressor(
-            input_dim=input_dim,
-            num_layers=best_params['num_layers'],
-            hidden_size=best_params['hidden_size'],
-            dropout_prob=best_params['dropout_prob'],
-            lr=best_params['lr'],
-            weight_decay=best_params['weight_decay']
-        ).to(device)
-        
-    elif model_type == 'Transformer':
-        model = TransformerRegressor(
-            input_dim=input_dim,
-            num_layers=best_params['num_layers'],
-            num_heads=best_params['num_heads'],
-            hidden_size=best_params['hidden_size'],
-            dropout_prob=best_params['dropout_prob'],
-            lr=best_params['lr'],
-            weight_decay=best_params['weight_decay']
-        ).to(device)
-    
-    # モデルの重みをロード
-    model.load_state_dict(torch.load(f'model/stock_price_forecast_regressor_{model_type.lower()}_{data_type}.pt'))
-    model.eval()  # 推論モードに設定
-    return model
-
-# 予測エンドポイント
-@app.post("/predict/")
-def predict(request: PredictionRequest):
-    model_type = request.model_type
-    data_type = request.data_type
-
-    # 入力データにx_predを使用する
-    features = x_preds[data_type][model_type].to(device)
-    
-    # モデルのロード
-    model = load_model(model_type, data_type)
-
-    # 予測する日数（5日間の予測）
-    n_steps = 5
-
-    # 逐次予測の結果を保存するリスト
-    sequential_predictions = []
-
-    # テストデータのコピーを作成（逐次予測でデータを更新するため）
-    current_input = features.clone()
-
-    # 逐次予測を実行
-    with torch.no_grad():
-        for step in range(n_steps):
-            # モデルに現在の入力を渡して1日分を予測
-            prediction = model(current_input)[:, 0].unsqueeze(1)
-
-            # 予測結果を保存
-            sequential_predictions.append(prediction.cpu().numpy())
-
-            # 予測した結果を次のタイムステップの入力に組み込む
-            # predictionを current_input の特徴量の次元数に合わせる
-            feature_dim = current_input.size(2)  # current_inputの3次元目のサイズ（特徴量数）
-            prediction = prediction.unsqueeze(2).expand(-1, -1, feature_dim)  # [1, 1, feature_dim] になる
-
-            current_input = torch.cat([current_input[:, 1:], prediction], dim=1)
-
-    # 逐次予測の結果を連結
-    sequential_predictions = np.concatenate(sequential_predictions, axis=1)
-
-    # 結果を元のスケールに戻す
-    t_scaler = t_scalers[data_type][model_type]
-    predictions_rescaled = t_scaler.inverse_transform(sequential_predictions)[0]
-
-    # 予測結果を返す
-    if data_type == 'nikkei':
-        df_prediction = df_stock_data_n225[['Adj Close']].tail(1)
-        df_prediction.rename(columns={'Adj Close': '終値'}, inplace=True)
-        df_prediction = df_prediction.T
-        df_prediction.columns = df_prediction.columns.strftime('%Y年%m月%d日')
-        df_day_1_5 = pd.DataFrame(predictions_rescaled)
-        df_day_1_5.columns = ['終値']
-        df_day_1_5 = df_day_1_5.T
-        df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
-        df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
-    
-    elif data_type == 'dow':
-        df_prediction = df_stock_data_dow[['Adj Close']].tail(1)
-        df_prediction.rename(columns={'Adj Close': '終値'}, inplace=True)
-        df_prediction = df_prediction.T
-        df_prediction.columns = df_prediction.columns.strftime('%Y年%m月%d日')
-        df_day_1_5 = pd.DataFrame(predictions_rescaled)
-        df_day_1_5.columns = ['終値']
-        df_day_1_5 = df_day_1_5.T
-        df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
-        df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
-    
-    elif data_type == 'sp500':
-        df_prediction = df_stock_data_sp500[['Adj Close']].tail(1)
-        df_prediction.rename(columns={'Adj Close': '終値'}, inplace=True)
-        df_prediction = df_prediction.T
-        df_prediction.columns = df_prediction.columns.strftime('%Y年%m月%d日')
-        df_day_1_5 = pd.DataFrame(predictions_rescaled)
-        df_day_1_5.columns = ['終値']
-        df_day_1_5 = df_day_1_5.T
-        df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
-        df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
-    
-    elif data_type == 'nasdaq':
-        df_prediction = df_stock_data_nasdaq[['Adj Close']].tail(1)
-        df_prediction.rename(columns={'Adj Close': '終値'}, inplace=True)
-        df_prediction = df_prediction.T
-        df_prediction.columns = df_prediction.columns.strftime('%Y年%m月%d日')
-        df_day_1_5 = pd.DataFrame(predictions_rescaled)
-        df_day_1_5.columns = ['終値']
-        df_day_1_5 = df_day_1_5.T
-        df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
-        df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
-        
-    return {
-        "prediction": df_prediction}
-            #{
-            #df_prediction
-            #"day_1": f"{predictions_rescaled[0]:.3f}円",
-            #"day_2": f"{predictions_rescaled[1]:.3f}円",
-            #"day_3": f"{predictions_rescaled[2]:.3f}円",
-            #"day_4": f"{predictions_rescaled[3]:.3f}円",
-            #"day_5": f"{predictions_rescaled[4]:.3f}円"
-        #}
-    #}
 
 # モデルタイプ、データタイプの選択肢
 data_types = st.selectbox(
@@ -812,6 +284,16 @@ model_types = st.selectbox(
     ['LSTM', 'CNN', 'CNN-LSTM', 'TimesNet'] # 'Transformer'
 )
 
+# 今日の日付を取得
+today = datetime.today()
+
+# 日付をフォーマット (年-月-日) に変更
+start = '1800-01-01'
+end = today.strftime('%Y-%m-%d')
+
+# ウィンドウサイズ
+window = 30
+
 # 初期化 (最初に `show_graph` が存在しない場合に False を設定)
 if 'show_graph2' not in st.session_state:
     st.session_state.show_graph2 = False
@@ -821,6 +303,523 @@ if st.button('予測を実行'):
     st.session_state.show_graph2 = True  # グラフを表示する状態に設定
     
 if st.session_state.show_graph2: # グラフを表示するかどうかを確認
+
+    def company_stock_data(ticker, start, end):
+
+        # 株価データを取得(期間指定)
+        df = yf.download(ticker, start=start, end=end)
+
+        # タイムゾーンを削除
+        df.index = df.index.tz_localize(None)
+
+        # dfが2段のカラムを持つDataFrameの場合
+        df.columns = df.columns.get_level_values(0)
+
+        # Yahoo Financeからティッカー情報を取得
+        stock_info = yf.Ticker(ticker)
+        company_name = stock_info.info.get('longName', 'Company name not found')
+
+        # MACD
+        # 0以上:上昇トレンド
+        # 0以下:下降トレンド
+        # MACD_hist = MACD - MACD_signal
+        #df['MACD'], df['MACD_signal'], df['MACD_hist'] = ta.MACD(df['Adj Close'], fastperiod=12, slowperiod=26, signalperiod=9)
+
+        # RSI
+        #df['RSI'] = ta.RSI(df['Adj Close'], timeperiod=14)
+
+        # ボリンジャーバンド
+        # 2σに入る
+        # matype=0:単純移動平均
+        # matype=1:指数移動平均
+        # matype=2:加重移動平均
+        #df['upper'], df['middle'], df['lower'] = ta.BBANDS(df['Adj Close'], timeperiod=20, nbdevup=2, nbdevdn=2, matype=0)
+
+        # date, price
+        date = df.index
+        price = df['Adj Close']
+
+        # 単純移動平均
+        df['SMA05'] = df['Adj Close'].rolling(window=5).mean()
+        df['SMA25'] = df['Adj Close'].rolling(window=25).mean()
+        df['SMA75'] = df['Adj Close'].rolling(window=75).mean()
+        df['SMA200'] = df['Adj Close'].rolling(window=200).mean()
+
+        # 基準線:過去26日間の最高値と最安値の平均を結んだ線
+        max26 = df['High'].rolling(window=26).max()
+        min26 = df['Low'].rolling(window=26).min()
+        df['base_line'] = (max26 + min26) / 2
+
+        # 転換線:過去9日間の最高値と最安値の平均を結んだ線
+        high9 = df['High'].rolling(window=9).max()
+        low9 = df['Low'].rolling(window=9).min()
+        df['turn_line'] = (high9 + low9) / 2
+
+        # 先行スパン1:基準線と転換線の平均を結んだ線を26日分未来にずらした線
+        df['span1'] = (df['base_line'] + df['turn_line']) / 2
+        df['span1'] = df['span1'].shift(25)
+
+        # 先行スパン2:過去52日間の最高値と最安値の平均を結んだ線を26日分未来にずらした線
+        high52 = df['High'].rolling(window=52).max()
+        low52 = df['Low'].rolling(window=52).min()
+        df['span2'] = (high52 + low52) / 2
+        df['span2'] = df['span2'].shift(25)
+
+        # 遅行線:当日の終値を26日分過去にずらした線、売り買いのタイミングを判断。遅行線より上なら売り、下なら買い
+        df['slow_line'] = df['Adj Close'].shift(-25)
+
+        # 単純移動平均
+        # High
+        df['High_SMA05'] = df['High'].rolling(window=5).mean()
+        df['High_SMA25'] = df['High'].rolling(window=25).mean()
+        df['High_SMA75'] = df['High'].rolling(window=75).mean()
+        df['High_SMA200'] = df['High'].rolling(window=200).mean()
+
+        # Low
+        df['Low_SMA05'] = df['Low'].rolling(window=5).mean()
+        df['Low_SMA25'] = df['Low'].rolling(window=25).mean()
+        df['Low_SMA75'] = df['Low'].rolling(window=75).mean()
+        df['Low_SMA200'] = df['Low'].rolling(window=200).mean()
+
+        # Open
+        df['Open_SMA05'] = df['Open'].rolling(window=5).mean()
+        df['Open_SMA25'] = df['Open'].rolling(window=25).mean()
+        df['Open_SMA75'] = df['Open'].rolling(window=75).mean()
+        df['Open_SMA200'] = df['Open'].rolling(window=200).mean()
+
+        # 加重移動平均
+        # 重みのリスト
+        weights = np.array([1, 2, 3])  # 直近日間に重みをつける
+
+        # WMAを計算
+        def weighted_moving_average(x):
+            return np.dot(x, weights) / weights.sum()
+
+        # 加重移動平均を適用
+        df['Adj Close WMA'] = df['Adj Close'].rolling(window=3).apply(weighted_moving_average, raw=True)
+        df['Open WMA'] = df['Open'].rolling(window=3).apply(weighted_moving_average, raw=True)
+        df['High WMA'] = df['High'].rolling(window=3).apply(weighted_moving_average, raw=True)
+        df['Low WMA'] = df['Low'].rolling(window=3).apply(weighted_moving_average, raw=True)
+
+        # 指数平滑移動平均
+        # spanが小さいほど直近の値に重みを多く与える
+        df['Adj Close EMA'] = df['Adj Close'].ewm(span=3, adjust=False).mean()
+        df['Open EMA'] = df['Open'].ewm(span=3, adjust=False).mean()
+        df['High EMA'] = df['High'].ewm(span=3, adjust=False).mean()
+        df['Low EMA'] = df['Low'].ewm(span=3, adjust=False).mean()
+
+        # dfを返す
+        return df
+
+    # 株価予測のデータを作成
+    #from data.defs.def_company_stock_data import company_stock_data # 関数のインポート
+    #import datetime
+    #import pandas as pd
+    from data.defs.def_processing_model import processing_lstm, processing_cnn, processing_cnn_lstm, processing_timesnet, processing_transformer
+
+    if data_types == '日経平均株価':
+        
+        # 日経225株価データを取得
+        ticker = '^N225'
+        df_stock_data_n225 = pd.DataFrame()
+        df_stock_data_n225 = company_stock_data(ticker, start, end)
+        from data.df_columns import df_columns # カラム
+        df_stock_data_n225 = df_stock_data_n225[df_stock_data_n225.columns.intersection(df_columns)]
+        nikkei_x_pred_lstm, nikkei_input_dim_lstm, nikkei_t_scaler_lstm = processing_lstm(df_stock_data_n225, window)
+        nikkei_x_pred_cnn, nikkei_input_dim_cnn, nikkei_t_scaler_cnn = processing_cnn(df_stock_data_n225, window)
+        nikkei_x_pred_cnn_lstm, nikkei_input_dim_cnn_lstm, nikkei_t_scaler_cnn_lstm = processing_cnn_lstm(df_stock_data_n225, window)
+        nikkei_x_pred_timesnet, nikkei_input_dim_timesnet, nikkei_t_scaler_timesnet = processing_timesnet(df_stock_data_n225, window)
+        nikkei_x_pred_transformer, nikkei_input_dim_transformer, nikkei_t_scaler_transformer = processing_transformer(df_stock_data_n225, window)
+        print(df_stock_data_n225.tail(1)) # df_stock_data_n225 の確認
+
+    elif data_types == 'NYダウ':
+        # ダウデータを取得
+        ticker = '^DJI'
+        df_stock_data_dow = pd.DataFrame()
+        df_stock_data_dow = company_stock_data(ticker, start, end)
+        from data.df_columns import df_columns # カラム
+        df_stock_data_dow = df_stock_data_dow[df_stock_data_dow.columns.intersection(df_columns)]
+        dow_x_pred_lstm, dow_input_dim_lstm, dow_t_scaler_lstm = processing_lstm(df_stock_data_dow, window)
+        dow_x_pred_cnn, dow_input_dim_cnn, dow_t_scaler_cnn = processing_cnn(df_stock_data_dow, window)
+        dow_x_pred_cnn_lstm, dow_input_dim_cnn_lstm, dow_t_scaler_cnn_lstm = processing_cnn_lstm(df_stock_data_dow, window)
+        dow_x_pred_timesnet, dow_input_dim_timesnet, dow_t_scaler_timesnet = processing_timesnet(df_stock_data_dow, window)
+        dow_x_pred_transformer, dow_input_dim_transformer, dow_t_scaler_transformer = processing_transformer(df_stock_data_dow, window)
+        print(df_stock_data_dow.tail(1)) # df_stock_data_dow の確認
+
+    elif data_types == 'S&P500':
+        # SP500 のデータを取得
+        ticker = '^GSPC'
+        df_stock_data_sp500 = pd.DataFrame()
+        df_stock_data_sp500 = company_stock_data(ticker, start, end)
+        from data.df_columns import df_columns # カラム
+        df_stock_data_sp500 = df_stock_data_sp500[df_stock_data_sp500.columns.intersection(df_columns)]
+        sp500_x_pred_lstm, sp500_input_dim_lstm, sp500_t_scaler_lstm = processing_lstm(df_stock_data_sp500, window)
+        sp500_x_pred_cnn, sp500_input_dim_cnn, sp500_t_scaler_cnn = processing_cnn(df_stock_data_sp500, window)
+        sp500_x_pred_cnn_lstm, sp500_input_dim_cnn_lstm, sp500_t_scaler_cnn_lstm = processing_cnn_lstm(df_stock_data_sp500, window)
+        sp500_x_pred_timesnet, sp500_input_dim_timesnet, sp500_t_scaler_timesnet = processing_timesnet(df_stock_data_sp500, window)
+        sp500_x_pred_transformer, sp500_input_dim_transformer, sp500_t_scaler_transformer = processing_transformer(df_stock_data_sp500, window)
+        print(df_stock_data_sp500.tail(1)) # df_stock_data_sp500 の確認
+
+    elif data_types == 'NASDAQ':
+        # NASDAQ のデータを取得
+        ticker = '^IXIC'
+        df_stock_data_nasdaq = pd.DataFrame()
+        df_stock_data_nasdaq = company_stock_data(ticker, start, end)
+        from data.df_columns import df_columns # カラム
+        df_stock_data_nasdaq = df_stock_data_nasdaq[df_stock_data_nasdaq.columns.intersection(df_columns)]
+        nasdaq_x_pred_lstm, nasdaq_input_dim_lstm, nasdaq_t_scaler_lstm = processing_lstm(df_stock_data_nasdaq, window)
+        nasdaq_x_pred_cnn, nasdaq_input_dim_cnn, nasdaq_t_scaler_cnn = processing_cnn(df_stock_data_nasdaq, window)
+        nasdaq_x_pred_cnn_lstm, nasdaq_input_dim_cnn_lstm, nasdaq_t_scaler_cnn_lstm = processing_cnn_lstm(df_stock_data_nasdaq, window)
+        nasdaq_x_pred_timesnet, nasdaq_input_dim_timesnet, nasdaq_t_scaler_timesnet = processing_timesnet(df_stock_data_nasdaq, window)
+        nasdaq_x_pred_transformer, nasdaq_input_dim_transformer, nasdaq_t_scaler_transformer = processing_transformer(df_stock_data_nasdaq, window)
+        print(df_stock_data_nasdaq.tail(1)) # df_stock_data_nasdaq の確認
+
+
+    # シーケンスデータの作成
+    #from data.df_stock_data import df_stock_data_n225, df_stock_data_dow, df_stock_data_sp500, df_stock_data_nasdaq
+    
+
+    # 各データセットとモデルごとにx_predをまとめる関数
+    def get_x_preds():
+        return {
+            "nikkei": {
+                "LSTM": nikkei_x_pred_lstm,
+                "CNN": nikkei_x_pred_cnn,
+                "CNN-LSTM": nikkei_x_pred_cnn_lstm,
+                "TimesNet": nikkei_x_pred_timesnet,
+                "Transformer": nikkei_x_pred_transformer
+            },
+            "dow": {
+                "LSTM": dow_x_pred_lstm,
+                "CNN": dow_x_pred_cnn,
+                "CNN-LSTM": dow_x_pred_cnn_lstm,
+                "TimesNet": dow_x_pred_timesnet,
+                "Transformer": dow_x_pred_transformer
+            },
+            "sp500": {
+                "LSTM": sp500_x_pred_lstm,
+                "CNN": sp500_x_pred_cnn,
+                "CNN-LSTM": sp500_x_pred_cnn_lstm,
+                "TimesNet": sp500_x_pred_timesnet,
+                "Transformer": sp500_x_pred_transformer
+            },
+            "nasdaq": {
+                "LSTM": nasdaq_x_pred_lstm,
+                "CNN": nasdaq_x_pred_cnn,
+                "CNN-LSTM": nasdaq_x_pred_cnn_lstm,
+                "TimesNet": nasdaq_x_pred_timesnet,
+                "Transformer": nasdaq_x_pred_transformer
+            }
+        }
+
+    # 各データセットとモデルごとにinput_dimをまとめる関数
+    def get_input_dims():
+        return {
+            "nikkei": {
+                "LSTM": nikkei_input_dim_lstm,
+                "CNN": nikkei_input_dim_cnn,
+                "CNN-LSTM": nikkei_input_dim_cnn_lstm,
+                "TimesNet": nikkei_input_dim_timesnet,
+                "Transformer": nikkei_input_dim_transformer
+            },
+            "dow": {
+                "LSTM": dow_input_dim_lstm,
+                "CNN": dow_input_dim_cnn,
+                "CNN-LSTM": dow_input_dim_cnn_lstm,
+                "TimesNet": dow_input_dim_timesnet,
+                "Transformer": dow_input_dim_transformer
+            },
+            "sp500": {
+                "LSTM": sp500_input_dim_lstm,
+                "CNN": sp500_input_dim_cnn,
+                "CNN-LSTM": sp500_input_dim_cnn_lstm,
+                "TimesNet": sp500_input_dim_timesnet,
+                "Transformer": sp500_input_dim_transformer
+            },
+            "nasdaq": {
+                "LSTM": nasdaq_input_dim_lstm,
+                "CNN": nasdaq_input_dim_cnn,
+                "CNN-LSTM": nasdaq_input_dim_cnn_lstm,
+                "TimesNet": nasdaq_input_dim_timesnet,
+                "Transformer": nasdaq_input_dim_transformer
+            }
+        }
+
+    # 各データセットとモデルごとにt_scalerをまとめる関数
+    def get_t_scalers():
+        return {
+            "nikkei": {
+                "LSTM": nikkei_t_scaler_lstm,
+                "CNN": nikkei_t_scaler_cnn,
+                "CNN-LSTM": nikkei_t_scaler_cnn_lstm,
+                "TimesNet": nikkei_t_scaler_timesnet,
+                "Transformer": nikkei_t_scaler_transformer
+            },
+            "dow": {
+                "LSTM": dow_t_scaler_lstm,
+                "CNN": dow_t_scaler_cnn,
+                "CNN-LSTM": dow_t_scaler_cnn_lstm,
+                "TimesNet": dow_t_scaler_timesnet,
+                "Transformer": dow_t_scaler_transformer
+            },
+            "sp500": {
+                "LSTM": sp500_t_scaler_lstm,
+                "CNN": sp500_t_scaler_cnn,
+                "CNN-LSTM": sp500_t_scaler_cnn_lstm,
+                "TimesNet": sp500_t_scaler_timesnet,
+                "Transformer": sp500_t_scaler_transformer
+            },
+            "nasdaq": {
+                "LSTM": nasdaq_t_scaler_lstm,
+                "CNN": nasdaq_t_scaler_cnn,
+                "CNN-LSTM": nasdaq_t_scaler_cnn_lstm,
+                "TimesNet": nasdaq_t_scaler_timesnet,
+                "Transformer": nasdaq_t_scaler_transformer
+            }
+        }
+
+    # 関数を呼び出して辞書を取得
+    x_preds = get_x_preds()
+    input_dims = get_input_dims()
+    t_scalers = get_t_scalers()
+
+    # 入力データの形式を定義（JSONリクエスト用）
+    class PredictionRequest(BaseModel):
+        model_type: str  # 'LSTM', 'CNN', 'CNN-LSTM', 'TimesNet', 'Transformer'
+        data_type: str   # 'nikkei', 'dow', 'usd_jpy', 'wti', 'gold', 'us_10yb', 'nikkei_cme'
+        features: list
+
+    # モデルのロード
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # モデル選択の関数
+    def load_model(model_type, data_type):
+        # data_type と model_type に基づいて input_dim と最適パラメータを取得
+        try:
+            input_dim = input_dims[data_type][model_type]
+        except KeyError:
+            raise ValueError(f"Invalid data_type '{data_type}' or model_type '{model_type}'. Please check the available options.")
+        
+        # データタイプに基づいて適切なパラメータを選択
+        if data_type == 'nikkei':
+            if model_type == 'LSTM':
+                best_params = best_params_lstm_nikkei
+            elif model_type == 'CNN':
+                best_params = best_params_cnn_nikkei
+            elif model_type == 'CNN-LSTM':
+                best_params = best_params_cnn_lstm_nikkei
+            elif model_type == 'TimesNet':
+                best_params = best_params_timesnet_nikkei
+            elif model_type == 'Transformer':
+                best_params = best_params_transformer_nikkei
+            else:
+                raise ValueError("Invalid model_type. Choose either 'LSTM' or 'CNN'.")
+            
+        elif data_type == 'dow':
+            if model_type == 'LSTM':
+                best_params = best_params_lstm_dow
+            elif model_type == 'CNN':
+                best_params = best_params_cnn_dow
+            elif model_type == 'CNN-LSTM':
+                best_params = best_params_cnn_lstm_dow
+            elif model_type == 'TimesNet':
+                best_params = best_params_timesnet_dow
+            elif model_type == 'Transformer':
+                best_params = best_params_transformer_dow
+            else:
+                raise ValueError("Invalid model_type. Choose either 'LSTM' or 'CNN'.")
+            
+        elif data_type == 'sp500':
+            if model_type == 'LSTM':
+                best_params = best_params_lstm_sp500
+            elif model_type == 'CNN':
+                best_params = best_params_cnn_sp500
+            elif model_type == 'CNN-LSTM':
+                best_params = best_params_cnn_lstm_sp500
+            elif model_type == 'TimesNet':
+                best_params = best_params_timesnet_sp500
+            elif model_type == 'Transformer':
+                best_params = best_params_transformer_sp500
+            else:
+                raise ValueError("Invalid model_type. Choose either 'LSTM' or 'CNN'.")
+            
+        elif data_type == 'nasdaq':
+            if model_type == 'LSTM':
+                best_params = best_params_lstm_nasdaq
+            elif model_type == 'CNN':
+                best_params = best_params_cnn_nasdaq
+            elif model_type == 'CNN-LSTM':
+                best_params = best_params_cnn_lstm_nasdaq
+            elif model_type == 'TimesNet':
+                best_params = best_params_timesnet_nasdaq
+            elif model_type == 'Transformer':
+                best_params = best_params_transformer_nasdaq
+            else:
+                raise ValueError("Invalid model_type. Choose either 'LSTM' or 'CNN'.")
+            
+        else:
+            raise ValueError(f"Invalid data_type '{data_type}'. Choose either 'nikkei' or 'dow'.")
+        
+        # モデルの作成とロード
+        if model_type == 'LSTM':
+            model = LSTMRegressor(
+                input_dim=input_dim,
+                hidden_size=best_params['hidden_size'],
+                num_layers=best_params['num_layers'],
+                dropout_prob=best_params['dropout_prob'],
+                lr=best_params['lr'],
+                weight_decay=best_params['weight_decay']
+            ).to(device)
+            
+        elif model_type == 'CNN':
+            model = CNNRegressor(
+                input_dim=input_dim,
+                num_filters=best_params['num_filters'],
+                kernel_size=best_params['kernel_size'],
+                dropout_prob=best_params['dropout_prob'],
+                lr=best_params['lr'],
+                weight_decay=best_params['weight_decay']
+            ).to(device)
+            
+        elif model_type == 'CNN-LSTM':
+            model = CNN_LSTM_Regressor(
+                input_dim=input_dim,
+                num_filters=best_params['num_filters'],
+                kernel_size=best_params['kernel_size'],
+                hidden_size=best_params['hidden_size'],
+                dropout_prob=best_params['dropout_prob'],
+                lr=best_params['lr'],
+                weight_decay=best_params['weight_decay']
+            ).to(device)
+            
+        elif model_type == 'TimesNet':
+            model = TimesNetRegressor(
+                input_dim=input_dim,
+                num_layers=best_params['num_layers'],
+                hidden_size=best_params['hidden_size'],
+                dropout_prob=best_params['dropout_prob'],
+                lr=best_params['lr'],
+                weight_decay=best_params['weight_decay']
+            ).to(device)
+            
+        elif model_type == 'Transformer':
+            model = TransformerRegressor(
+                input_dim=input_dim,
+                num_layers=best_params['num_layers'],
+                num_heads=best_params['num_heads'],
+                hidden_size=best_params['hidden_size'],
+                dropout_prob=best_params['dropout_prob'],
+                lr=best_params['lr'],
+                weight_decay=best_params['weight_decay']
+            ).to(device)
+        
+        # モデルの重みをロード
+        model.load_state_dict(torch.load(f'model/stock_price_forecast_regressor_{model_type.lower()}_{data_type}.pt'))
+        model.eval()  # 推論モードに設定
+        return model
+
+    # 予測エンドポイント
+    @app.post("/predict/")
+    def predict(request: PredictionRequest):
+        model_type = request.model_type
+        data_type = request.data_type
+
+        # 入力データにx_predを使用する
+        features = x_preds[data_type][model_type].to(device)
+        
+        # モデルのロード
+        model = load_model(model_type, data_type)
+
+        # 予測する日数（5日間の予測）
+        n_steps = 5
+
+        # 逐次予測の結果を保存するリスト
+        sequential_predictions = []
+
+        # テストデータのコピーを作成（逐次予測でデータを更新するため）
+        current_input = features.clone()
+
+        # 逐次予測を実行
+        with torch.no_grad():
+            for step in range(n_steps):
+                # モデルに現在の入力を渡して1日分を予測
+                prediction = model(current_input)[:, 0].unsqueeze(1)
+
+                # 予測結果を保存
+                sequential_predictions.append(prediction.cpu().numpy())
+
+                # 予測した結果を次のタイムステップの入力に組み込む
+                # predictionを current_input の特徴量の次元数に合わせる
+                feature_dim = current_input.size(2)  # current_inputの3次元目のサイズ（特徴量数）
+                prediction = prediction.unsqueeze(2).expand(-1, -1, feature_dim)  # [1, 1, feature_dim] になる
+
+                current_input = torch.cat([current_input[:, 1:], prediction], dim=1)
+
+        # 逐次予測の結果を連結
+        sequential_predictions = np.concatenate(sequential_predictions, axis=1)
+
+        # 結果を元のスケールに戻す
+        t_scaler = t_scalers[data_type][model_type]
+        predictions_rescaled = t_scaler.inverse_transform(sequential_predictions)[0]
+
+        # 予測結果を返す
+        if data_type == 'nikkei':
+            df_prediction = df_stock_data_n225[['Adj Close']].tail(1)
+            df_prediction.rename(columns={'Adj Close': '終値'}, inplace=True)
+            df_prediction = df_prediction.T
+            df_prediction.columns = df_prediction.columns.strftime('%Y年%m月%d日')
+            df_day_1_5 = pd.DataFrame(predictions_rescaled)
+            df_day_1_5.columns = ['終値']
+            df_day_1_5 = df_day_1_5.T
+            df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
+            df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
+        
+        elif data_type == 'dow':
+            df_prediction = df_stock_data_dow[['Adj Close']].tail(1)
+            df_prediction.rename(columns={'Adj Close': '終値'}, inplace=True)
+            df_prediction = df_prediction.T
+            df_prediction.columns = df_prediction.columns.strftime('%Y年%m月%d日')
+            df_day_1_5 = pd.DataFrame(predictions_rescaled)
+            df_day_1_5.columns = ['終値']
+            df_day_1_5 = df_day_1_5.T
+            df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
+            df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
+        
+        elif data_type == 'sp500':
+            df_prediction = df_stock_data_sp500[['Adj Close']].tail(1)
+            df_prediction.rename(columns={'Adj Close': '終値'}, inplace=True)
+            df_prediction = df_prediction.T
+            df_prediction.columns = df_prediction.columns.strftime('%Y年%m月%d日')
+            df_day_1_5 = pd.DataFrame(predictions_rescaled)
+            df_day_1_5.columns = ['終値']
+            df_day_1_5 = df_day_1_5.T
+            df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
+            df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
+        
+        elif data_type == 'nasdaq':
+            df_prediction = df_stock_data_nasdaq[['Adj Close']].tail(1)
+            df_prediction.rename(columns={'Adj Close': '終値'}, inplace=True)
+            df_prediction = df_prediction.T
+            df_prediction.columns = df_prediction.columns.strftime('%Y年%m月%d日')
+            df_day_1_5 = pd.DataFrame(predictions_rescaled)
+            df_day_1_5.columns = ['終値']
+            df_day_1_5 = df_day_1_5.T
+            df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
+            df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
+            
+        return {
+            "prediction": df_prediction}
+                #{
+                #df_prediction
+                #"day_1": f"{predictions_rescaled[0]:.3f}円",
+                #"day_2": f"{predictions_rescaled[1]:.3f}円",
+                #"day_3": f"{predictions_rescaled[2]:.3f}円",
+                #"day_4": f"{predictions_rescaled[3]:.3f}円",
+                #"day_5": f"{predictions_rescaled[4]:.3f}円"
+            #}
+        #}
+
+
     # 入力された特徴量を適切な形式に変換
     request = PredictionRequest(
         model_type=model_types,
