@@ -889,54 +889,6 @@ yesterday = today - timedelta(days=1) # 前日の日付を取得
 start_date2 = st.date_input('開始日', yesterday - timedelta(days=365*5), key='start_date') # 日付範囲の入力
 end_date2 = st.date_input('終了日', yesterday, key='end_date') # 日付範囲の入力
 
-# 日経平均株価データを取得
-ticker = '^N225'
-stock_info = yf.Ticker(ticker)
-ticker_name = stock_info.info.get('longName', 'Company name not found')
-#start=datetime.today() - timedelta(days=3650)
-#today = datetime.today() # 今日の日付を取得
-#end = today.strftime('%Y-%m-%d')
-
-df_nikkei = yf.download(ticker, start=start_date2.strftime('%Y-%m-%d'), end=end_date2.strftime('%Y-%m-%d')) # 株価データ
-df_nikkei.rename(columns={'Adj Close': ticker_name}, inplace=True) # df_nikkei の 'Adj Close' を ticker_name に変更
-df_nikkei = df_nikkei[ticker_name] # df_nikkei の ticker_name を抽出
-df_nikkei.index = df_nikkei.index.tz_localize(None) # タイムゾーンを削除
-# df.columns = df.columns.get_level_values(0) # dfが2段のカラムを持つDataFrameの場合
-
-# TOPIX-17
-topix_17_codes = pd.DataFrame(list(range(1617, 1634))) # TOPIX-17 のコードリスト
-topix_17_codes.columns = ['TOPIX_17_code'] # topix_17_codes のカラム名を 'TOPIX_17_code' に変更
-topix_17_codes['TOPIX_17_code'] = topix_17_codes['TOPIX_17_code'].astype(str) + '.T' # TOPIX_17_code に '.T' を付ける
-topix_17_codes = topix_17_codes['TOPIX_17_code'].tolist() # topix_17_codes をリスト化
-df_topix_17 = yf.download(topix_17_codes, start=start_date2.strftime('%Y-%m-%d'), end=end_date2.strftime('%Y-%m-%d')) # TOPIX_17 のデータ
-df_topix_17 = df_topix_17['Adj Close'] # df_topix_17 の 'Adj Close' を抽出
-df_topix_17.index = df_topix_17.index.tz_localize(None) # タイムゾーンを削除
-
-# 'TOPIX_17_code' のティッカー情報を for 文で取得
-df_ticker_name = pd.DataFrame(columns=['TOPIX_17_code', 'ticker_name']) # 空のデータフレームを作成
-for ticker in topix_17_codes:
-    stock_info = yf.Ticker(ticker)# Yahoo Financeからティッカー情報を取得
-    ticker_name = stock_info.info.get('longName', 'Company name not found')
-    new_row = pd.DataFrame({'TOPIX_17_code': [ticker], 'ticker_name': [ticker_name]}) # 新しい行を追加するためのデータフレームを作成
-    df_ticker_name = pd.concat([df_ticker_name, new_row], ignore_index=True) # pd.concat()を使って新しい行を df_ticker_name に追加
-    
-df_ticker_name['ticker_name'] = df_ticker_name['ticker_name'].str.replace('NEXT FUNDS TOPIX-17 ', '') # ticker_name の'NEXT FUNDS TOPIX-17 ', 'ETF'  を削除
-df_ticker_name['ticker_name'] = df_ticker_name['ticker_name'].str.replace(' ETF', '') # ticker_name の'NEXT FUNDS TOPIX-17 ', 'ETF'  を削除
-df_topix_17.columns = df_ticker_name['ticker_name'].values # df_topix_17 のカラム名を ticker_name に変更
-
-# df_nikkei と df_topix_17 を結合
-df_nikkei_topix_17 = pd.concat([df_nikkei, df_topix_17], axis=1)
-df_nikkei_topix_17_log_return = np.log(df_nikkei_topix_17 / df_nikkei_topix_17.shift(1)) # 対数利益率
-df_nikkei_topix_17_return = df_nikkei_topix_17_log_return.mean() * 250 # 年率リターン
-df_nikkei_topix_17_return = pd.DataFrame(df_nikkei_topix_17_return, columns=['return']) # DataFrame
-df_nikkei_topix_17_std = df_nikkei_topix_17_log_return.std() * 250 ** 0.5 # 標準偏差
-df_nikkei_topix_17_std = pd.DataFrame(df_nikkei_topix_17_std, columns=['std']) # DataFrame
-
-# df_topix_17_return と df_topix_17_std を結合
-df_topix_17_return_std = pd.concat([df_nikkei_topix_17_return, df_nikkei_topix_17_std], axis=1)
-df_return_std = df_topix_17_return_std
-df_return_std['sr'] = df_return_std['return'] / df_return_std['std'] # SR
-
 # 初期化 (最初に `show_graph` が存在しない場合に False を設定)
 if 'show_graph3' not in st.session_state:
     st.session_state.show_graph3 = False
@@ -945,6 +897,56 @@ if 'show_graph3' not in st.session_state:
 if st.button('リスク＆リターンを表示', key='display3_graph'):
     st.session_state.show_graph3 = True  # グラフを表示する状態に設定
 if st.session_state.show_graph3:
+
+    # 日経平均株価データを取得
+    ticker = '^N225'
+    stock_info = yf.Ticker(ticker)
+    ticker_name = stock_info.info.get('longName', 'Company name not found')
+    #start=datetime.today() - timedelta(days=3650)
+    #today = datetime.today() # 今日の日付を取得
+    #end = today.strftime('%Y-%m-%d')
+
+    df_nikkei = yf.download(ticker, start=start_date2.strftime('%Y-%m-%d'), end=end_date2.strftime('%Y-%m-%d')) # 株価データ
+    df_nikkei.rename(columns={'Adj Close': ticker_name}, inplace=True) # df_nikkei の 'Adj Close' を ticker_name に変更
+    df_nikkei = df_nikkei[ticker_name] # df_nikkei の ticker_name を抽出
+    df_nikkei.index = df_nikkei.index.tz_localize(None) # タイムゾーンを削除
+    # df.columns = df.columns.get_level_values(0) # dfが2段のカラムを持つDataFrameの場合
+
+    # TOPIX-17
+    topix_17_codes = pd.DataFrame(list(range(1617, 1634))) # TOPIX-17 のコードリスト
+    topix_17_codes.columns = ['TOPIX_17_code'] # topix_17_codes のカラム名を 'TOPIX_17_code' に変更
+    topix_17_codes['TOPIX_17_code'] = topix_17_codes['TOPIX_17_code'].astype(str) + '.T' # TOPIX_17_code に '.T' を付ける
+    topix_17_codes = topix_17_codes['TOPIX_17_code'].tolist() # topix_17_codes をリスト化
+    df_topix_17 = yf.download(topix_17_codes, start=start_date2.strftime('%Y-%m-%d'), end=end_date2.strftime('%Y-%m-%d')) # TOPIX_17 のデータ
+    df_topix_17 = df_topix_17['Adj Close'] # df_topix_17 の 'Adj Close' を抽出
+    df_topix_17.index = df_topix_17.index.tz_localize(None) # タイムゾーンを削除
+
+    # 'TOPIX_17_code' のティッカー情報を for 文で取得
+    df_ticker_name = pd.DataFrame(columns=['TOPIX_17_code', 'ticker_name']) # 空のデータフレームを作成
+    for ticker in topix_17_codes:
+        stock_info = yf.Ticker(ticker)# Yahoo Financeからティッカー情報を取得
+        ticker_name = stock_info.info.get('longName', 'Company name not found')
+        new_row = pd.DataFrame({'TOPIX_17_code': [ticker], 'ticker_name': [ticker_name]}) # 新しい行を追加するためのデータフレームを作成
+        df_ticker_name = pd.concat([df_ticker_name, new_row], ignore_index=True) # pd.concat()を使って新しい行を df_ticker_name に追加
+        
+    df_ticker_name['ticker_name'] = df_ticker_name['ticker_name'].str.replace('NEXT FUNDS TOPIX-17 ', '') # ticker_name の'NEXT FUNDS TOPIX-17 ', 'ETF'  を削除
+    df_ticker_name['ticker_name'] = df_ticker_name['ticker_name'].str.replace(' ETF', '') # ticker_name の'NEXT FUNDS TOPIX-17 ', 'ETF'  を削除
+    df_topix_17.columns = df_ticker_name['ticker_name'].values # df_topix_17 のカラム名を ticker_name に変更
+
+    # df_nikkei と df_topix_17 を結合
+    df_nikkei_topix_17 = pd.concat([df_nikkei, df_topix_17], axis=1)
+    df_nikkei_topix_17_log_return = np.log(df_nikkei_topix_17 / df_nikkei_topix_17.shift(1)) # 対数利益率
+    df_nikkei_topix_17_return = df_nikkei_topix_17_log_return.mean() * 250 # 年率リターン
+    df_nikkei_topix_17_return = pd.DataFrame(df_nikkei_topix_17_return, columns=['return']) # DataFrame
+    df_nikkei_topix_17_std = df_nikkei_topix_17_log_return.std() * 250 ** 0.5 # 標準偏差
+    df_nikkei_topix_17_std = pd.DataFrame(df_nikkei_topix_17_std, columns=['std']) # DataFrame
+
+    # df_topix_17_return と df_topix_17_std を結合
+    df_topix_17_return_std = pd.concat([df_nikkei_topix_17_return, df_nikkei_topix_17_std], axis=1)
+    df_return_std = df_topix_17_return_std
+    df_return_std['sr'] = df_return_std['return'] / df_return_std['std'] # SR
+
+
     plt.figure(figsize=(10, 10)) # df_return_std を散布図でプロット
     sns.scatterplot(data=df_return_std, x='std', y='return')
     for i, txt in enumerate(df_return_std.index): # 点にindexを表示
