@@ -45,55 +45,7 @@ import japanize_matplotlib
 
 
 
-# 最適化されたパラメータの読み込み
-# nikkei
-with open('best_params_lstm_nikkei.json', 'r') as f:
-    best_params_lstm_nikkei = json.load(f)
-with open('best_params_cnn_nikkei.json', 'r') as f:
-    best_params_cnn_nikkei = json.load(f)
-with open('best_params_cnn_lstm_nikkei.json', 'r') as f:
-    best_params_cnn_lstm_nikkei = json.load(f)
-with open('best_params_timesnet_nikkei.json', 'r') as f:
-    best_params_timesnet_nikkei = json.load(f)
-with open('best_params_transformer_nikkei.json', 'r') as f:
-    best_params_transformer_nikkei = json.load(f)
 
-
-# dow
-with open('best_params_lstm_dow.json', 'r') as f:
-    best_params_lstm_dow = json.load(f)
-with open('best_params_cnn_dow.json', 'r') as f:
-    best_params_cnn_dow = json.load(f)
-with open('best_params_cnn_lstm_dow.json', 'r') as f:
-    best_params_cnn_lstm_dow = json.load(f)
-with open('best_params_timesnet_dow.json', 'r') as f:
-    best_params_timesnet_dow = json.load(f)
-with open('best_params_transformer_dow.json', 'r') as f:
-    best_params_transformer_dow = json.load(f)
-
-# sp500
-with open('best_params_lstm_sp500.json', 'r') as f:
-    best_params_lstm_sp500 = json.load(f)
-with open('best_params_cnn_sp500.json', 'r') as f:
-    best_params_cnn_sp500 = json.load(f)
-with open('best_params_cnn_lstm_sp500.json', 'r') as f:
-    best_params_cnn_lstm_sp500 = json.load(f)
-with open('best_params_timesnet_sp500.json', 'r') as f:
-    best_params_timesnet_sp500 = json.load(f)
-with open('best_params_transformer_sp500.json', 'r') as f:
-    best_params_transformer_sp500 = json.load(f)
-
-# nasdaq
-with open('best_params_lstm_nasdaq.json', 'r') as f:
-    best_params_lstm_nasdaq = json.load(f)
-with open('best_params_cnn_nasdaq.json', 'r') as f:
-    best_params_cnn_nasdaq = json.load(f)
-with open('best_params_cnn_lstm_nasdaq.json', 'r') as f:
-    best_params_cnn_lstm_nasdaq = json.load(f)
-with open('best_params_timesnet_nasdaq.json', 'r') as f:
-    best_params_timesnet_nasdaq = json.load(f)
-with open('best_params_transformer_nasdaq.json', 'r') as f:
-    best_params_transformer_nasdaq = json.load(f)
 
 # FastAPIアプリケーションのインスタンスを作成
 app = FastAPI()
@@ -294,6 +246,55 @@ end = today.strftime('%Y-%m-%d')
 # ウィンドウサイズ
 window = 30
 
+# 最適化されたパラメータの読み込み
+# nikkei
+with open('best_params_lstm_nikkei.json', 'r') as f:
+    best_params_lstm_nikkei = json.load(f)
+with open('best_params_cnn_nikkei.json', 'r') as f:
+    best_params_cnn_nikkei = json.load(f)
+with open('best_params_cnn_lstm_nikkei.json', 'r') as f:
+    best_params_cnn_lstm_nikkei = json.load(f)
+with open('best_params_timesnet_nikkei.json', 'r') as f:
+    best_params_timesnet_nikkei = json.load(f)
+with open('best_params_transformer_nikkei.json', 'r') as f:
+    best_params_transformer_nikkei = json.load(f)
+
+# dow
+with open('best_params_lstm_dow.json', 'r') as f:
+    best_params_lstm_dow = json.load(f)
+with open('best_params_cnn_dow.json', 'r') as f:
+    best_params_cnn_dow = json.load(f)
+with open('best_params_cnn_lstm_dow.json', 'r') as f:
+    best_params_cnn_lstm_dow = json.load(f)
+with open('best_params_timesnet_dow.json', 'r') as f:
+    best_params_timesnet_dow = json.load(f)
+with open('best_params_transformer_dow.json', 'r') as f:
+    best_params_transformer_dow = json.load(f)
+
+# sp500
+with open('best_params_lstm_sp500.json', 'r') as f:
+    best_params_lstm_sp500 = json.load(f)
+with open('best_params_cnn_sp500.json', 'r') as f:
+    best_params_cnn_sp500 = json.load(f)
+with open('best_params_cnn_lstm_sp500.json', 'r') as f:
+    best_params_cnn_lstm_sp500 = json.load(f)
+with open('best_params_timesnet_sp500.json', 'r') as f:
+    best_params_timesnet_sp500 = json.load(f)
+with open('best_params_transformer_sp500.json', 'r') as f:
+    best_params_transformer_sp500 = json.load(f)
+
+# nasdaq
+with open('best_params_lstm_nasdaq.json', 'r') as f:
+    best_params_lstm_nasdaq = json.load(f)
+with open('best_params_cnn_nasdaq.json', 'r') as f:
+    best_params_cnn_nasdaq = json.load(f)
+with open('best_params_cnn_lstm_nasdaq.json', 'r') as f:
+    best_params_cnn_lstm_nasdaq = json.load(f)
+with open('best_params_timesnet_nasdaq.json', 'r') as f:
+    best_params_timesnet_nasdaq = json.load(f)
+with open('best_params_transformer_nasdaq.json', 'r') as f:
+    best_params_transformer_nasdaq = json.load(f)
+
 # 初期化 (最初に `show_graph` が存在しない場合に False を設定)
 if 'show_graph2' not in st.session_state:
     st.session_state.show_graph2 = False
@@ -481,102 +482,141 @@ if st.session_state.show_graph2: # グラフを表示するかどうかを確認
 
     # 各データセットとモデルごとにx_predをまとめる関数
     def get_x_preds():
-        return {
-            "nikkei": {
-                "LSTM": nikkei_x_pred_lstm,
-                "CNN": nikkei_x_pred_cnn,
-                "CNN-LSTM": nikkei_x_pred_cnn_lstm,
-                "TimesNet": nikkei_x_pred_timesnet,
-                "Transformer": nikkei_x_pred_transformer
-            },
-            "dow": {
-                "LSTM": dow_x_pred_lstm,
-                "CNN": dow_x_pred_cnn,
-                "CNN-LSTM": dow_x_pred_cnn_lstm,
-                "TimesNet": dow_x_pred_timesnet,
-                "Transformer": dow_x_pred_transformer
-            },
-            "sp500": {
-                "LSTM": sp500_x_pred_lstm,
-                "CNN": sp500_x_pred_cnn,
-                "CNN-LSTM": sp500_x_pred_cnn_lstm,
-                "TimesNet": sp500_x_pred_timesnet,
-                "Transformer": sp500_x_pred_transformer
-            },
-            "nasdaq": {
-                "LSTM": nasdaq_x_pred_lstm,
-                "CNN": nasdaq_x_pred_cnn,
-                "CNN-LSTM": nasdaq_x_pred_cnn_lstm,
-                "TimesNet": nasdaq_x_pred_timesnet,
-                "Transformer": nasdaq_x_pred_transformer
+        if data_types == '日経平均株価':
+            return {
+                "nikkei": {
+                    "LSTM": nikkei_x_pred_lstm,
+                    "CNN": nikkei_x_pred_cnn,
+                    "CNN-LSTM": nikkei_x_pred_cnn_lstm,
+                    "TimesNet": nikkei_x_pred_timesnet,
+                    "Transformer": nikkei_x_pred_transformer
+                }
             }
-        }
+            
+        elif data_types == 'NYダウ':
+            return {
+                "dow": {
+                    "LSTM": dow_x_pred_lstm,
+                    "CNN": dow_x_pred_cnn,
+                    "CNN-LSTM": dow_x_pred_cnn_lstm,
+                    "TimesNet": dow_x_pred_timesnet,
+                    "Transformer": dow_x_pred_transformer
+                }
+            }
+            
+        elif data_types == 'S&P500':
+            return {
+                "sp500": {
+                    "LSTM": sp500_x_pred_lstm,
+                    "CNN": sp500_x_pred_cnn,
+                    "CNN-LSTM": sp500_x_pred_cnn_lstm,
+                    "TimesNet": sp500_x_pred_timesnet,
+                    "Transformer": sp500_x_pred_transformer
+                }
+            }
+        
+        elif data_types == 'NASDAQ':
+            return {
+                "nasdaq": {
+                    "LSTM": nasdaq_x_pred_lstm,
+                    "CNN": nasdaq_x_pred_cnn,
+                    "CNN-LSTM": nasdaq_x_pred_cnn_lstm,
+                    "TimesNet": nasdaq_x_pred_timesnet,
+                    "Transformer": nasdaq_x_pred_transformer
+                }
+            }
 
     # 各データセットとモデルごとにinput_dimをまとめる関数
     def get_input_dims():
-        return {
-            "nikkei": {
-                "LSTM": nikkei_input_dim_lstm,
-                "CNN": nikkei_input_dim_cnn,
-                "CNN-LSTM": nikkei_input_dim_cnn_lstm,
-                "TimesNet": nikkei_input_dim_timesnet,
-                "Transformer": nikkei_input_dim_transformer
-            },
-            "dow": {
-                "LSTM": dow_input_dim_lstm,
-                "CNN": dow_input_dim_cnn,
-                "CNN-LSTM": dow_input_dim_cnn_lstm,
-                "TimesNet": dow_input_dim_timesnet,
-                "Transformer": dow_input_dim_transformer
-            },
-            "sp500": {
-                "LSTM": sp500_input_dim_lstm,
-                "CNN": sp500_input_dim_cnn,
-                "CNN-LSTM": sp500_input_dim_cnn_lstm,
-                "TimesNet": sp500_input_dim_timesnet,
-                "Transformer": sp500_input_dim_transformer
-            },
-            "nasdaq": {
-                "LSTM": nasdaq_input_dim_lstm,
-                "CNN": nasdaq_input_dim_cnn,
-                "CNN-LSTM": nasdaq_input_dim_cnn_lstm,
-                "TimesNet": nasdaq_input_dim_timesnet,
-                "Transformer": nasdaq_input_dim_transformer
+        if data_types == '日経平均株価':
+            return {
+                "nikkei": {
+                    "LSTM": nikkei_input_dim_lstm,
+                    "CNN": nikkei_input_dim_cnn,
+                    "CNN-LSTM": nikkei_input_dim_cnn_lstm,
+                    "TimesNet": nikkei_input_dim_timesnet,
+                    "Transformer": nikkei_input_dim_transformer
+                }
             }
-        }
+        
+        elif data_types == 'NYダウ':
+            return {
+                "dow": {
+                    "LSTM": dow_input_dim_lstm,
+                    "CNN": dow_input_dim_cnn,
+                    "CNN-LSTM": dow_input_dim_cnn_lstm,
+                    "TimesNet": dow_input_dim_timesnet,
+                    "Transformer": dow_input_dim_transformer
+                }
+            }
+        
+        elif data_types == 'S&P500':
+            return {
+                "sp500": {
+                    "LSTM": sp500_input_dim_lstm,
+                    "CNN": sp500_input_dim_cnn,
+                    "CNN-LSTM": sp500_input_dim_cnn_lstm,
+                    "TimesNet": sp500_input_dim_timesnet,
+                    "Transformer": sp500_input_dim_transformer
+                }
+            }
+        
+        elif data_types == 'NASDAQ':
+            return {
+                "nasdaq": {
+                    "LSTM": nasdaq_input_dim_lstm,
+                    "CNN": nasdaq_input_dim_cnn,
+                    "CNN-LSTM": nasdaq_input_dim_cnn_lstm,
+                    "TimesNet": nasdaq_input_dim_timesnet,
+                    "Transformer": nasdaq_input_dim_transformer
+                }
+            }
 
     # 各データセットとモデルごとにt_scalerをまとめる関数
     def get_t_scalers():
-        return {
-            "nikkei": {
-                "LSTM": nikkei_t_scaler_lstm,
-                "CNN": nikkei_t_scaler_cnn,
-                "CNN-LSTM": nikkei_t_scaler_cnn_lstm,
-                "TimesNet": nikkei_t_scaler_timesnet,
-                "Transformer": nikkei_t_scaler_transformer
-            },
-            "dow": {
+        if data_types == '日経平均株価':
+            return {
+                "nikkei": {
+                    "LSTM": nikkei_t_scaler_lstm,
+                    "CNN": nikkei_t_scaler_cnn,
+                    "CNN-LSTM": nikkei_t_scaler_cnn_lstm,
+                    "TimesNet": nikkei_t_scaler_timesnet,
+                    "Transformer": nikkei_t_scaler_transformer
+                }
+            }
+        
+        elif data_types == 'NYダウ':
+            return {
+                "dow": {
                 "LSTM": dow_t_scaler_lstm,
                 "CNN": dow_t_scaler_cnn,
                 "CNN-LSTM": dow_t_scaler_cnn_lstm,
                 "TimesNet": dow_t_scaler_timesnet,
                 "Transformer": dow_t_scaler_transformer
-            },
-            "sp500": {
-                "LSTM": sp500_t_scaler_lstm,
-                "CNN": sp500_t_scaler_cnn,
-                "CNN-LSTM": sp500_t_scaler_cnn_lstm,
-                "TimesNet": sp500_t_scaler_timesnet,
-                "Transformer": sp500_t_scaler_transformer
-            },
-            "nasdaq": {
-                "LSTM": nasdaq_t_scaler_lstm,
-                "CNN": nasdaq_t_scaler_cnn,
-                "CNN-LSTM": nasdaq_t_scaler_cnn_lstm,
-                "TimesNet": nasdaq_t_scaler_timesnet,
-                "Transformer": nasdaq_t_scaler_transformer
+                }
             }
-        }
+        
+        elif data_types == 'S&P500':
+            return {
+                "sp500": {
+                    "LSTM": sp500_t_scaler_lstm,
+                    "CNN": sp500_t_scaler_cnn,
+                    "CNN-LSTM": sp500_t_scaler_cnn_lstm,
+                    "TimesNet": sp500_t_scaler_timesnet,
+                    "Transformer": sp500_t_scaler_transformer
+                }
+            }
+        
+        elif data_types == 'NASDAQ':
+            return {
+                "nasdaq": {
+                    "LSTM": nasdaq_t_scaler_lstm,
+                    "CNN": nasdaq_t_scaler_cnn,
+                    "CNN-LSTM": nasdaq_t_scaler_cnn_lstm,
+                    "TimesNet": nasdaq_t_scaler_timesnet,
+                    "Transformer": nasdaq_t_scaler_transformer
+                }
+            }
 
     # 関数を呼び出して辞書を取得
     x_preds = get_x_preds()
