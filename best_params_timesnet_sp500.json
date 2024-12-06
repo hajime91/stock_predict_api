@@ -1,1 +1,1 @@
-{"hidden_size": 252, "num_layers": 3, "dropout_prob": 0.1377865374044647, "lr": 0.0007675783699603856, "batch_size": 45, "weight_decay": 2.3010282164591068e-05}
+{"hidden_size": 252, "num_layers": 1, "dropout_prob": 0.3438529078833621, "lr": 2.8107752905020587e-05, "batch_size": 123, "weight_decay": 1.340209470934055e-05}
