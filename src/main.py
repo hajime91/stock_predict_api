@@ -894,7 +894,7 @@ if 'show_graph3' not in st.session_state:
     st.session_state.show_graph3 = False
     
 # グラフ表示ボタン
-if st.button('リスク＆リターンを表示', key='display3_graph'):
+if st.button('リターン＆リスクを表示', key='display3_graph'):
     st.session_state.show_graph3 = True  # グラフを表示する状態に設定
 if st.session_state.show_graph3:
 
@@ -953,7 +953,7 @@ if st.session_state.show_graph3:
         plt.annotate(txt, (df_return_std.iloc[i]['std'], df_return_std.iloc[i]['return']))
     plt.xlabel('Risk')
     plt.ylabel('Return')
-    plt.title('Return & Risk') # グラフのタイトル
+    #plt.title('Return & Risk') # グラフのタイトル
     st.pyplot(plt)
 
 # 条件変更時にリセット
