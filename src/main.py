@@ -1011,7 +1011,7 @@ if selected_options:
     if st.session_state.show_graph5: # グラフを表示するかどうかを確認
         # プログレスバーの初期化
         #progress_bar = st.progress(0)
-        progress_text = st.empty()
+        #progress_text = st.empty()
         
         # 配分計算
         log_returns = np.log(df_assets / df_assets.shift(1)) # 対数利益率
@@ -1046,6 +1046,7 @@ if selected_options:
         
         # プログレスバーをリセットして最適化にも適用
         progress_bar = st.progress(0)
+        progress_text = st.empty()
         progress_text.text("最適化を実行中...")
 
         # 銘柄ごとの期待リターンとリスクの計算
