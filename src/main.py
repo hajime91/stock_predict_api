@@ -1010,11 +1010,11 @@ if selected_options:
         
     if st.session_state.show_graph5: # グラフを表示するかどうかを確認
         # プログレスバーの初期化
-        progress_bar = st.progress(0)
-        progress_text = st.empty()
+        #progress_bar = st.progress(0)
+        #progress_text = st.empty()
         
         # 配分計算
-        log_returns = np.log(df_assets / df_assets.shift(1)) # 対数利益率
+        #log_returns = np.log(df_assets / df_assets.shift(1)) # 対数利益率
         # weights_list = [] # 空のリストを用意
         # assets_columns = [] # 空のリストを用意
         # pfolio_returns = [] # 空のリストを用意
@@ -1046,9 +1046,11 @@ if selected_options:
         
         # プログレスバーをリセットして最適化にも適用
         progress_bar = st.progress(0)
+        progress_text = st.empty()
         progress_text.text("最適化を実行中...")
 
         # 銘柄ごとの期待リターンとリスクの計算
+        log_returns = np.log(df_assets / df_assets.shift(1)) # 対数利益率
         stocks = assets  # 選定銘柄を作成
         expected_returns = log_returns.mean() * 250  # 年間期待リターン
         risks = log_returns.std() * (250 ** 0.5)     # 年間リスク
