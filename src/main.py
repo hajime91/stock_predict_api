@@ -1010,7 +1010,7 @@ if selected_options:
         
     if st.session_state.show_graph5: # グラフを表示するかどうかを確認
         # プログレスバーの初期化
-        progress_bar = st.progress(0)
+        #progress_bar = st.progress(0)
         progress_text = st.empty()
         
         # 配分計算
