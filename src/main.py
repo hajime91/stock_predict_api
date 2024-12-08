@@ -1015,31 +1015,31 @@ if selected_options:
         
         # 配分計算
         log_returns = np.log(df_assets / df_assets.shift(1)) # 対数利益率
-        weights_list = [] # 空のリストを用意
-        assets_columns = [] # 空のリストを用意
-        pfolio_returns = [] # 空のリストを用意
-        pfolio_volatilities = [] # 空のリストを用意
-        for x in range(10000):
-            weights = np.random.random(selected_options_number)
-            weights /= np.sum(weights) # ランダムなそれぞれのウェイトを全体のウェイトで割る
-            weights_list.append(weights)
-            assets_columns.append(assets)
-            pfolio_returns.append(np.sum(log_returns[assets_columns[x]].dropna().mean() * weights_list[x]) * 250) # ポートフォリオの予想年率リターン
-            pfolio_volatilities.append(np.sqrt(np.dot(weights_list[x].T, np.dot(log_returns[assets_columns[x]].cov() * 250, weights_list[x])))) # ポートフォリオの予想年率リスク
+        # weights_list = [] # 空のリストを用意
+        # assets_columns = [] # 空のリストを用意
+        # pfolio_returns = [] # 空のリストを用意
+        # pfolio_volatilities = [] # 空のリストを用意
+        # for x in range(10000):
+        #     weights = np.random.random(selected_options_number)
+        #     weights /= np.sum(weights) # ランダムなそれぞれのウェイトを全体のウェイトで割る
+        #     weights_list.append(weights)
+        #     assets_columns.append(assets)
+        #     pfolio_returns.append(np.sum(log_returns[assets_columns[x]].dropna().mean() * weights_list[x]) * 250) # ポートフォリオの予想年率リターン
+        #     pfolio_volatilities.append(np.sqrt(np.dot(weights_list[x].T, np.dot(log_returns[assets_columns[x]].cov() * 250, weights_list[x])))) # ポートフォリオの予想年率リスク
 
-            # プログレスバーの更新
-            if x % 100 == 0 or x == 9999:  # 進捗の更新頻度を調整
-                progress = int((x + 1) / 10000 * 100)
-                progress_bar.progress(progress)
-                progress_text.text(f"配分計算中... {progress}% 完了")
+        #     # プログレスバーの更新
+        #     if x % 100 == 0 or x == 9999:  # 進捗の更新頻度を調整
+        #         progress = int((x + 1) / 10000 * 100)
+        #         progress_bar.progress(progress)
+        #         progress_text.text(f"配分計算中... {progress}% 完了")
             
-        # 配分計算完了
-        progress_bar.progress(100)
-        progress_bar.empty()
+        # # 配分計算完了
+        # progress_bar.progress(100)
+        # progress_bar.empty()
 
-        pfolio_returns = np.array(pfolio_returns) # ポートフォリオの期待リターン
-        pfolio_volatilities = np.array(pfolio_volatilities) # ポートフォリオのリスク
-        portfolios = pd.DataFrame({'Returns': pfolio_returns, 'Volatility': pfolio_volatilities}) # DataFrame
+        # pfolio_returns = np.array(pfolio_returns) # ポートフォリオの期待リターン
+        # pfolio_volatilities = np.array(pfolio_volatilities) # ポートフォリオのリスク
+        # portfolios = pd.DataFrame({'Returns': pfolio_returns, 'Volatility': pfolio_volatilities}) # DataFrame
 
         # 最適化
         import optuna
