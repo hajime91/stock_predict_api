@@ -1067,8 +1067,8 @@ if selected_options:
             #weights = np.clip(weights, 0, None)  # 負の値をゼロにクリップ
             #weights /= np.sum(weights)  # 合計が1.0になるように正規化
             
-            if last_weight < 0 or np.sum(weights) > 1.0 or any(w < 0 for w in weights): # 最後の重みが0以上でなければ無限大を返す
-                return float('inf')  # 条件を満たさない場合は無限大を返す
+            #if last_weight < 0 or np.sum(weights) > 1.0 or any(w < 0 for w in weights): # 最後の重みが0以上でなければ無限大を返す
+                #return float('inf')  # 条件を満たさない場合は無限大を返す
             
             if np.sum(weights) > 1.0: # 合計が1.0を超えていないか確認
                 return float('inf')  # 条件を満たさない場合は無限大を返す
