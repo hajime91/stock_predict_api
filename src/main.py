@@ -1052,8 +1052,8 @@ if selected_options:
         # 銘柄ごとの期待リターンとリスクの計算
         log_returns = np.log(df_assets / df_assets.shift(1)) # 対数利益率
         stocks = assets  # 選定銘柄を作成
-        expected_returns = log_returns.mean() * 250  # 年間期待リターン
-        risks = log_returns.std() * (250 ** 0.5)     # 年間リスク
+        expected_returns = log_returns.mean() * 250  # 年率期待リターン
+        risks = log_returns.std() * (250 ** 0.5)     # 年率リスク
         risk_free_rate = 0.00  # 無リスク金利 (0% と仮定)
         np.random.seed(0)
 
@@ -1070,10 +1070,11 @@ if selected_options:
             if np.sum(weights) > 1.0: # 合計が1.0を超えていないか確認
                 return float('inf')  # 条件を満たさない場合は無限大を返す
             
-            selected_returns = expected_returns[selected_indices] # 選んだ銘柄のリターンを計算
+            selected_returns = expected_returns[selected_indices] # 選んだ銘柄の年率リターン
             selected_risks = risks[selected_indices] # 選んだ銘柄のリスクを計算
-            portfolio_return = np.sum(selected_returns * weights) # 期待リターンとリスクの計算
-            portfolio_risk = np.sqrt(np.sum((weights * selected_risks) ** 2))  # ポートフォリオのリスク
+            cov_matrix = np.cov(selected_returns, rowvar=False) # 共分散行列を計算（年率）
+            portfolio_return = np.sum(selected_returns * weights) # 年率期待リターン
+            portfolio_risk = np.sqrt(weights.T @ cov_matrix @ weights)  # ポートフォリオの年率リスク
             if portfolio_risk <= 0: # シャープレシオの計算
                 return float('inf')  # リスクが0または負の値の場合は無限大のシャープレシオとして扱う
 
@@ -1139,13 +1140,15 @@ if selected_options:
         df_portfolio = df_topix_17[selected_stocks]
         
         # ポートフォリオの期待リターン、リスク、シャープレシオ
-        log_returns_selected = np.log(df_portfolio / df_portfolio.shift(1)) # 対数利益率
-        expected_returns_selected = log_returns_selected.mean() * 250 # log_returns_selected の期待リターン
-        expected_returns_selected = expected_returns_selected * weights # weights をかける
+        log_returns_selected = np.log(df_portfolio / df_portfolio.shift(1)) # 銘柄ごとの対数利益率
+        expected_returns_selected = log_returns_selected.mean() * 250 # 銘柄ごとの年率期待リターン
+        expected_returns_selected = expected_returns_selected * weights # 銘柄ごとの年率期待リターンに weights をかける
         expected_returns_selected = np.sum(expected_returns_selected) # ポートフォリオの期待リターン
-        risks_selected = log_returns_selected.std() * 250 ** 0.5 # 年率リスク
-        risks_selected = (risks_selected * weights) ** 2 # weights をかけて二乗
-        risks_selected = np.sqrt(np.sum(risks_selected)) # 合計の平方根
+        log_returns_selected_cov_matrix = np.cov(log_returns_selected.mean() * 250, rowvar=False) # 共分散行列を計算
+        risks_selected = np.sqrt(weights.T @ log_returns_selected_cov_matrix @ weights)  # ポートフォリオの年率リスク
+        #risks_selected = log_returns_selected.std() * 250 ** 0.5 # 年率リスク
+        #risks_selected = (risks_selected * weights) ** 2 # weights をかけて二乗
+        #risks_selected = np.sqrt(np.sum(risks_selected)) # 合計の平方根
         sharpe_ratio = (expected_returns_selected - risk_free_rate) / risks_selected # シャープレシオ
 
         # 結果の表示
