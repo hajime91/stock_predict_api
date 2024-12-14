@@ -1104,6 +1104,8 @@ if selected_options:
         progress_bar.progress(100)
         progress_bar.empty()
         progress_text = st.empty()
+        
+        selected_stocks = [stocks[i] for i in range(selected_options_number)] # 最適な銘柄インデックスを使って銘柄名を取得
 
         # 最良の結果を表示
         if study.best_params:
@@ -1111,7 +1113,7 @@ if selected_options:
             print("Best allocation (weights):", study.best_params)
 
             # 最適な銘柄インデックスを使って銘柄名を取得
-            selected_stocks = [stocks[i] for i in range(selected_options_number)]  # 4つの銘柄を選択
+            #selected_stocks = [stocks[i] for i in range(selected_options_number)]  # 4つの銘柄を選択
 
             # 最適な重みを取得
             selected_weights = np.array([study.best_params[f'weight_{i}'] for i in range(selected_options_number - 1)])
