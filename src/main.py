@@ -1060,7 +1060,9 @@ if selected_options:
         # ポートフォリオの最適化
         def objective(trial):
             selected_indices = assets # ランダムに銘柄数のインデックスを選択
-            weights = np.random.dirichlet(np.ones(selected_options_number), size=1).flatten()
+            #weights = np.random.dirichlet(np.ones(selected_options_number), size=1).flatten()
+            weights = np.random.random(selected_options_number)
+            weights /= np.sum(weights) # ランダムなそれぞれのウェイトを全体のウェイトで割る
             #raw_weights = np.array([trial.suggest_float(f'weight_{i}', 0.0, 1.0) for i in range(selected_options_number - 1)]) # 4つの重みを提案し、合計が1になるように正規化
             #last_weight = 1.0 - np.sum(raw_weights) # 最後の重みを計算（合計が1.0になるように調整）
             #if last_weight < 0: # 最後の重みが0以上でなければ無限大を返す
@@ -1068,8 +1070,8 @@ if selected_options:
             
             #weights = np.append(raw_weights, last_weight)  # 最後の重みを追加 # 重みを正規化する
             
-            #if np.sum(weights) > 1.0: # 合計が1.0を超えていないか確認
-                #return float('inf')  # 条件を満たさない場合は無限大を返す
+            if np.sum(weights) > 1.0: # 合計が1.0を超えていないか確認
+                return float('inf')  # 条件を満たさない場合は無限大を返す
             
             selected_returns = expected_returns[selected_indices] # 選んだ銘柄の年率リターン
             selected_risks = risks[selected_indices] # 選んだ銘柄のリスクを計算
