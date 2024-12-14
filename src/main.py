@@ -1128,6 +1128,9 @@ if selected_options:
         else:
             print("No valid allocation found.")
 
+        # 最適な銘柄インデックスを使って銘柄名を取得
+        selected_stocks = [stocks[i] for i in range(selected_options_number)]  # 4つの銘柄を選択
+        
         # 銘柄名と重みの表示
         for stock, weight in zip(selected_stocks, weights):
             print(f"{stock}: {weight:.4f}")
