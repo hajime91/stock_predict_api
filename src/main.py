@@ -1104,8 +1104,6 @@ if selected_options:
         progress_bar.progress(100)
         progress_bar.empty()
         progress_text = st.empty()
-        
-        selected_stocks = [stocks[i] for i in range(selected_options_number)] # 最適な銘柄インデックスを使って銘柄名を取得
 
         # 最良の結果を表示
         if study.best_params:
@@ -1113,7 +1111,7 @@ if selected_options:
             print("Best allocation (weights):", study.best_params)
 
             # 最適な銘柄インデックスを使って銘柄名を取得
-            #selected_stocks = [stocks[i] for i in range(selected_options_number)]  # 4つの銘柄を選択
+            selected_stocks = [stocks[i] for i in range(selected_options_number)]  # 4つの銘柄を選択
 
             # 最適な重みを取得
             selected_weights = np.array([study.best_params[f'weight_{i}'] for i in range(selected_options_number - 1)])
@@ -1127,6 +1125,17 @@ if selected_options:
             # 銘柄名と重みの表示
             for stock, weight in zip(selected_stocks, weights):
                 print(f"{stock}: {weight:.4f}")
+            
+            # DataFrame に格納
+            df_stock_weights = pd.DataFrame({
+                'Stock': selected_stocks,
+                'Weight':  [f"{w*100:.2f}%" for w in weights]
+            }).reset_index(drop=True)
+            
+            # Streamlit で DataFrame を表示
+            st.write("最適結果")
+            st.dataframe(df_stock_weights.set_index('Stock'))
+            
         else:
             print("No valid allocation found.")
 
@@ -1134,15 +1143,7 @@ if selected_options:
         #for stock, weight in zip(selected_stocks, weights):
             #print(f"{stock}: {weight:.4f}")
         
-        # DataFrame に格納
-        df_stock_weights = pd.DataFrame({
-            'Stock': selected_stocks,
-            'Weight':  [f"{w*100:.2f}%" for w in weights]
-        }).reset_index(drop=True)
         
-        # Streamlit で DataFrame を表示
-        st.write("最適結果")
-        st.dataframe(df_stock_weights.set_index('Stock'))
         
         # df_topix_17 から selected_stocks を取得
         df_portfolio = df_topix_17[selected_stocks]
