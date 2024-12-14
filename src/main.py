@@ -1063,7 +1063,7 @@ if selected_options:
             #raw_weights = np.array([trial.suggest_float(f'weight_{i}', 0.0, 1.0) for i in range(selected_options_number - 1)]) # 4つの重みを提案し、合計が1になるように正規化
             raw_weights = np.random.dirichlet(np.ones(selected_options_number), size=1).flatten()
             last_weight = 1.0 - np.sum(raw_weights) # 最後の重みを計算（合計が1.0になるように調整）
-            if last_weight < 0 or any(w < 0 for w in raw_weights): # 最後の重みが0以上でなければ無限大を返す
+            if last_weight < 0 : # 最後の重みが0以上でなければ無限大を返す
                 return float('inf')  # 条件を満たさない場合は無限大を返す
             
             weights = np.append(raw_weights, last_weight)  # 最後の重みを追加 # 重みを正規化する
