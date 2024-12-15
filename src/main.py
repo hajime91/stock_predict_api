@@ -894,7 +894,7 @@ if 'show_graph3' not in st.session_state:
     st.session_state.show_graph3 = False
     
 # グラフ表示ボタン
-if st.button('リターン＆リスクを表示', key='display3_graph'):
+if st.button('相関図とリターン＆リスクを表示', key='display3_graph'):
     st.session_state.show_graph3 = True  # グラフを表示する状態に設定
 if st.session_state.show_graph3:
 
@@ -946,14 +946,22 @@ if st.session_state.show_graph3:
     df_return_std = df_topix_17_return_std
     df_return_std['sr'] = df_return_std['return'] / df_return_std['std'] # SR
 
-
+    # 相関図
+    df_nikkei_topix_17_retio = df_nikkei_topix_17 / df_nikkei_topix_17.shift(1) - 1 # 騰落率
+    df_nikkei_topix_17_retio = df_nikkei_topix_17_retio.dropna() # NaN を削除
+    plt.figure(figsize=(10, 10))
+    sns.heatmap(df_nikkei_topix_17_retio.corr(), square=True, annot=True, fmt='.1f', center=0, vmax=1, vmin=-1, cmap='coolwarm')
+    plt.title('Correlation')
+    st.pyplot(plt)
+    
+    # 散布図
     plt.figure(figsize=(10, 10)) # df_return_std を散布図でプロット
     sns.scatterplot(data=df_return_std, x='std', y='return')
     for i, txt in enumerate(df_return_std.index): # 点にindexを表示
         plt.annotate(txt, (df_return_std.iloc[i]['std'], df_return_std.iloc[i]['return']))
     plt.xlabel('Risk')
     plt.ylabel('Return')
-    #plt.title('Return & Risk') # グラフのタイトル
+    plt.title('Return & Risk') # グラフのタイトル
     st.pyplot(plt)
 
 # 条件変更時にリセット
