@@ -813,6 +813,23 @@ if st.session_state.show_graph2: # グラフを表示するかどうかを確認
             df_day_1_5 = df_day_1_5.T
             df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
             df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
+            
+            df_pred_5 = pd.DataFrame(predictions_rescaled) # 5日分の予測データ
+            df_pred_5.columns = ['Adj Close'] # df_pred_5 のカラム名を Adj Close に変更
+            df_pred_5 = df_pred_5.T # df_pred_5 を転置
+            df_pred_5.columns = [f'day_{i+1}' for i in range(5)] # df_pred_5 のカラム名を for文で1日目、2日目、3日目...に変更
+            df_pred_5 = df_pred_5.T # df_pred_5 を転置
+            df_adj_close = df_stock_data_n225['Adj Close'] # df から Adj Close を取得
+            df_adj_close.index = df_adj_close.index.strftime('%Y-%m-%d')
+            df_adj_close_pred_5 = pd.concat([df_adj_close, df_pred_5], axis=0) # df_adj_close と df_pred_5 を結合
+            df_adj_close_pred_5 = df_adj_close_pred_5.iloc[-125:] # df_adj_close_pred_5 の最終行125行
+            
+            ar = np.arange(len(df_adj_close_pred_5)) # df_adj_close_pred_5 をプロット
+            plt.figure(figsize=(10, 5))
+            plt.plot(df_adj_close_pred_5.iloc[:120], color='blue', label='Adj Close') # df_adj_close_pred_5 の最初の120行は青色
+            plt.plot(df_adj_close_pred_5.iloc[-5:], color='red', label='prediction') # df_adj_close_pred_5 の最後の20行は赤色
+            plt.xticks(np.arange(0, len(df_adj_close_pred_5), 30)) # 横軸のラベル間隔を調整
+            st.pyplot(plt)
         
         elif data_type == 'dow':
             df_prediction = df_stock_data_dow[['Adj Close']].tail(1)
@@ -824,6 +841,23 @@ if st.session_state.show_graph2: # グラフを表示するかどうかを確認
             df_day_1_5 = df_day_1_5.T
             df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
             df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
+            
+            df_pred_5 = pd.DataFrame(predictions_rescaled) # 5日分の予測データ
+            df_pred_5.columns = ['Adj Close'] # df_pred_5 のカラム名を Adj Close に変更
+            df_pred_5 = df_pred_5.T # df_pred_5 を転置
+            df_pred_5.columns = [f'day_{i+1}' for i in range(5)] # df_pred_5 のカラム名を for文で1日目、2日目、3日目...に変更
+            df_pred_5 = df_pred_5.T # df_pred_5 を転置
+            df_adj_close = df_stock_data_dow['Adj Close'] # df から Adj Close を取得
+            df_adj_close.index = df_adj_close.index.strftime('%Y-%m-%d')
+            df_adj_close_pred_5 = pd.concat([df_adj_close, df_pred_5], axis=0) # df_adj_close と df_pred_5 を結合
+            df_adj_close_pred_5 = df_adj_close_pred_5.iloc[-125:] # df_adj_close_pred_5 の最終行125行
+            
+            ar = np.arange(len(df_adj_close_pred_5)) # df_adj_close_pred_5 をプロット
+            plt.figure(figsize=(10, 5))
+            plt.plot(df_adj_close_pred_5.iloc[:120], color='blue', label='Adj Close') # df_adj_close_pred_5 の最初の120行は青色
+            plt.plot(df_adj_close_pred_5.iloc[-5:], color='red', label='prediction') # df_adj_close_pred_5 の最後の20行は赤色
+            plt.xticks(np.arange(0, len(df_adj_close_pred_5), 30)) # 横軸のラベル間隔を調整
+            st.pyplot(plt)
         
         elif data_type == 'sp500':
             df_prediction = df_stock_data_sp500[['Adj Close']].tail(1)
@@ -835,6 +869,23 @@ if st.session_state.show_graph2: # グラフを表示するかどうかを確認
             df_day_1_5 = df_day_1_5.T
             df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
             df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
+            
+            df_pred_5 = pd.DataFrame(predictions_rescaled) # 5日分の予測データ
+            df_pred_5.columns = ['Adj Close'] # df_pred_5 のカラム名を Adj Close に変更
+            df_pred_5 = df_pred_5.T # df_pred_5 を転置
+            df_pred_5.columns = [f'day_{i+1}' for i in range(5)] # df_pred_5 のカラム名を for文で1日目、2日目、3日目...に変更
+            df_pred_5 = df_pred_5.T # df_pred_5 を転置
+            df_adj_close = df_stock_data_sp500['Adj Close'] # df から Adj Close を取得
+            df_adj_close.index = df_adj_close.index.strftime('%Y-%m-%d')
+            df_adj_close_pred_5 = pd.concat([df_adj_close, df_pred_5], axis=0) # df_adj_close と df_pred_5 を結合
+            df_adj_close_pred_5 = df_adj_close_pred_5.iloc[-125:] # df_adj_close_pred_5 の最終行125行
+            
+            ar = np.arange(len(df_adj_close_pred_5)) # df_adj_close_pred_5 をプロット
+            plt.figure(figsize=(10, 5))
+            plt.plot(df_adj_close_pred_5.iloc[:120], color='blue', label='Adj Close') # df_adj_close_pred_5 の最初の120行は青色
+            plt.plot(df_adj_close_pred_5.iloc[-5:], color='red', label='prediction') # df_adj_close_pred_5 の最後の20行は赤色
+            plt.xticks(np.arange(0, len(df_adj_close_pred_5), 30)) # 横軸のラベル間隔を調整
+            st.pyplot(plt)
         
         elif data_type == 'nasdaq':
             df_prediction = df_stock_data_nasdaq[['Adj Close']].tail(1)
@@ -846,6 +897,23 @@ if st.session_state.show_graph2: # グラフを表示するかどうかを確認
             df_day_1_5 = df_day_1_5.T
             df_day_1_5.columns = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
             df_prediction = pd.concat([df_prediction, df_day_1_5], axis=1, join='outer')
+            
+            df_pred_5 = pd.DataFrame(predictions_rescaled) # 5日分の予測データ
+            df_pred_5.columns = ['Adj Close'] # df_pred_5 のカラム名を Adj Close に変更
+            df_pred_5 = df_pred_5.T # df_pred_5 を転置
+            df_pred_5.columns = [f'day_{i+1}' for i in range(5)] # df_pred_5 のカラム名を for文で1日目、2日目、3日目...に変更
+            df_pred_5 = df_pred_5.T # df_pred_5 を転置
+            df_adj_close = df_stock_data_nasdaq['Adj Close'] # df から Adj Close を取得
+            df_adj_close.index = df_adj_close.index.strftime('%Y-%m-%d')
+            df_adj_close_pred_5 = pd.concat([df_adj_close, df_pred_5], axis=0) # df_adj_close と df_pred_5 を結合
+            df_adj_close_pred_5 = df_adj_close_pred_5.iloc[-125:] # df_adj_close_pred_5 の最終行125行
+            
+            ar = np.arange(len(df_adj_close_pred_5)) # df_adj_close_pred_5 をプロット
+            plt.figure(figsize=(10, 5))
+            plt.plot(df_adj_close_pred_5.iloc[:120], color='blue', label='Adj Close') # df_adj_close_pred_5 の最初の120行は青色
+            plt.plot(df_adj_close_pred_5.iloc[-5:], color='red', label='prediction') # df_adj_close_pred_5 の最後の20行は赤色
+            plt.xticks(np.arange(0, len(df_adj_close_pred_5), 30)) # 横軸のラベル間隔を調整
+            st.pyplot(plt)
             
         return {
             "prediction": df_prediction}
@@ -872,6 +940,8 @@ if st.session_state.show_graph2: # グラフを表示するかどうかを確認
         prediction_result = predict(request)  # 予測関数の呼び出し
         st.write('予測結果:')
         st.write(prediction_result['prediction'])
+        
+        
     except Exception as e:
         st.error(f"エラーが発生しました: {str(e)}")
 
